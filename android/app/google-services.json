@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "551768651640",
+    "project_id": "mindful-learning-app",
+    "storage_bucket": "mindful-learning-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:551768651640:android:1b6a794fe361c66a823a8d",
+        "android_client_info": {
+          "package_name": "com.example.mindful_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "551768651640-i2pueol64b388bqurf4kv4ovboi1j287.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBs51KMwcaH8I0Hd-9oQnhKXuw0Zw7FXds"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "551768651640-i2pueol64b388bqurf4kv4ovboi1j287.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
