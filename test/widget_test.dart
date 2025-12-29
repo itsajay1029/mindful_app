@@ -5,16 +5,36 @@
 // gestures. You can also use WidgetTester to find child widgets in the widget
 // tree, read text, and verify that the values of widget properties are correct.
 
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:mindful_app/main.dart';
+import 'package:mindful_app/screens/login_screen.dart';
 
 void main() {
-  testWidgets('App starts on Onboarding screen', (WidgetTester tester) async {
-    await tester.pumpWidget(const MindfulApp());
+  testWidgets('Login screen shows link-style signup toggle', (WidgetTester tester) async {
+    await tester.pumpWidget(
+      const MaterialApp(home: LoginScreen()),
+    );
 
-    // Onboarding screen has a Welcome app bar.
-    expect(find.text('Welcome'), findsOneWidget);
-    expect(find.text('Get Started'), findsOneWidget);
+    // Default state: login
+    expect(find.text('Log In!'), findsOneWidget);
+    expect(find.text("Don't have an account? "), findsOneWidget);
+    expect(find.text('Sign up'), findsOneWidget);
+
+    // Tap the link to switch to signup
+    await tester.tap(find.text('Sign up'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Sign Up!'), findsOneWidget);
+    expect(find.text('Already have an account? '), findsOneWidget);
+    expect(find.text('Log in'), findsOneWidget);
+
+    // Email/password form should be visible by default after toggling
+    expect(find.text('First name'), findsOneWidget);
+    expect(find.text('Last name'), findsOneWidget);
+    expect(find.text('Email address'), findsOneWidget);
+    expect(find.text('Password'), findsOneWidget);
+    expect(find.text('Confirm password'), findsOneWidget);
+    expect(find.text('Create account'), findsOneWidget);
   });
 }

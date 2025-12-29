@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Needed for playing network videos (video_player / ExoPlayer) in all build modes -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
     <application
         android:label="mindful_app"
         android:name="${applicationName}"
