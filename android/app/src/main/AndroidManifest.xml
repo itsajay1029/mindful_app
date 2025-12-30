@@ -2,6 +2,9 @@
     <!-- Needed for playing network videos (video_player / ExoPlayer) in all build modes -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- Android 13+ notification permission -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <application
         android:label="mindful_app"
         android:name="${applicationName}"

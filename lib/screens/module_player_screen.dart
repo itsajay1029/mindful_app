@@ -4,6 +4,7 @@ import 'package:video_player/video_player.dart';
 
 import '../models/learning_module.dart';
 import '../models/learning_path.dart';
+import '../models/user_enrollment.dart';
 import '../services/firestore_service.dart';
 
 /// Module Player
@@ -32,6 +33,10 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
   late final VideoPlayerController _videoController;
   final _reflectionController = TextEditingController();
   bool _busy = false;
+  bool _completed = false;
+  bool _loadingCompletion = true;
+  bool _checkingEnrollment = true;
+  bool _isEnrolled = false;
   String? _videoError;
 
   @override
@@ -39,6 +44,65 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
     super.initState();
     _videoController = VideoPlayerController.networkUrl(Uri.parse(widget.module.contentUrl));
     _initVideo();
+    _loadCompletion();
+    _loadEnrollment();
+  }
+
+  Future<void> _loadEnrollment() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      setState(() => _checkingEnrollment = false);
+      return;
+    }
+
+    try {
+      final snap = await FirestoreService().queryUserEnrollments(user.uid).get();
+      final enrollments = snap.docs.map(UserEnrollment.fromDoc).toList();
+      final enrolled = enrollments.any((e) => e.status == 'active' && e.pathId == widget.path.id);
+      if (!mounted) return;
+      setState(() {
+        _isEnrolled = enrolled;
+        _checkingEnrollment = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _checkingEnrollment = false);
+    }
+  }
+
+  Future<void> _loadCompletion() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      setState(() => _loadingCompletion = false);
+      return;
+    }
+
+    try {
+      final doc = await FirestoreService().userProgressDoc(
+        uid: user.uid,
+        pathId: widget.path.id,
+        moduleId: widget.module.id,
+      ).get();
+
+      final data = doc.data();
+      final isCompleted = (data?['completed'] == true);
+      final reflection = (data?['reflection'] as String?)?.trim();
+
+      if (!mounted) return;
+      setState(() {
+        _completed = isCompleted;
+        _loadingCompletion = false;
+      });
+
+      if (isCompleted && (reflection ?? '').isNotEmpty) {
+        _reflectionController.text = reflection!;
+      }
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingCompletion = false);
+    }
   }
 
   Future<void> _initVideo() async {
@@ -67,22 +131,28 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
 
+    if (_completed) return;
+
     setState(() => _busy = true);
     try {
-      // TODO: Decide XP formula. For now, 10 XP per module.
-      await FirestoreService().markModuleCompleted(
+      // XP Logic: on first completion only, add module.xp to users.xp
+      final didWrite = await FirestoreService().markModuleCompleted(
         uid: user.uid,
         pathId: widget.path.id,
         moduleId: widget.module.id,
         reflection: _reflectionController.text,
-        xpReward: 10,
+        xpReward: widget.module.xp,
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('+10 XP earned!')),
-      );
-      Navigator.of(context).pop();
+
+      setState(() => _completed = true);
+
+      if (didWrite) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('+${widget.module.xp} XP')),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -91,6 +161,81 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
   @override
   Widget build(BuildContext context) {
     final isReady = _videoController.value.isInitialized;
+
+    if (_checkingEnrollment) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (!_isEnrolled) {
+      final cs = Theme.of(context).colorScheme;
+      return Scaffold(
+        backgroundColor: const Color(0xFFF6F7FB),
+        appBar: AppBar(title: Text(widget.module.title)),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      height: 44,
+                      width: 44,
+                      decoration: BoxDecoration(
+                        color: cs.primary.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(Icons.lock_rounded, color: cs.primary),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Enroll required',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Please enroll in “${widget.path.title}” to unlock and play modules.',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: Colors.black.withValues(alpha: 0.7),
+                                ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              FilledButton(
+                onPressed: () async {
+                  final user = FirebaseAuth.instance.currentUser;
+                  if (user == null) return;
+                  await FirestoreService().enrollInPath(uid: user.uid, pathId: widget.path.id);
+                  await _loadEnrollment();
+                },
+                child: const Text('Enroll'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
@@ -195,7 +340,7 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
             ),
             const SizedBox(height: 6),
             Text(
-              '${widget.module.durationMinutes} min',
+              '${widget.module.durationMinutes} min • ${widget.module.xp} XP',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Colors.black.withValues(alpha: 0.6),
                     fontWeight: FontWeight.w600,
@@ -235,6 +380,7 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
                         controller: _reflectionController,
                         minLines: 3,
                         maxLines: 6,
+                        readOnly: _completed,
                         decoration: InputDecoration(
                           hintText: 'What did you notice? What will you apply?',
                           filled: true,
@@ -260,18 +406,18 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
             ),
             const SizedBox(height: 12),
             FilledButton(
-              onPressed: _busy ? null : _complete,
+              onPressed: (_busy || _completed || _loadingCompletion) ? null : _complete,
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               ),
-              child: _busy
+              child: (_busy || _loadingCompletion)
                   ? const SizedBox(
                       height: 18,
                       width: 18,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Mark Complete'),
+                  : Text(_completed ? 'Completed' : 'Mark Complete'),
             ),
           ],
         ),

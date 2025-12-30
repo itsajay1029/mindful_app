@@ -37,6 +37,10 @@ dependencies:
   cloud_firestore: ^5.6.0
   google_sign_in: ^6.3.0
 
+  # Local notifications (Phase 2 reminder)
+  flutter_local_notifications: ^18.0.1
+  timezone: ^0.10.1
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
 
@@ -99,4 +103,3 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
-

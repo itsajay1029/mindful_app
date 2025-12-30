@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
 import 'auth_gate.dart';
-
+  
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -158,6 +158,13 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final media = MediaQuery.of(context);
+    final h = media.size.height;
+
+    // Responsive header sizing so the top title never collides with the card.
+    final headerHeight = (h * 0.30).clamp(220.0, 280.0);
+    final headerTopSpacing = (h * 0.06).clamp(12.0, 28.0);
+    final headerToCardSpacing = (h * 0.04).clamp(12.0, 22.0);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -167,7 +174,7 @@ class _LoginScreenState extends State<LoginScreen> {
           Align(
             alignment: Alignment.topCenter,
             child: Container(
-              height: 240,
+              height: headerHeight,
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -192,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const SizedBox(height: 20),
+                    SizedBox(height: headerTopSpacing),
                     Text(
                       _isSignUp ? 'Create account,' : 'Welcome Back,',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -206,7 +213,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             fontWeight: FontWeight.w700,
                           ),
                     ),
-                    const SizedBox(height: 18),
+                    SizedBox(height: headerToCardSpacing),
 
                     // Card
                     Container(

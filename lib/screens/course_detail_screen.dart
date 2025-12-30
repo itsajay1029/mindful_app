@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/learning_module.dart';
 import '../models/learning_path.dart';
 import '../models/user_progress.dart';
+import '../models/user_enrollment.dart';
 import '../services/firestore_service.dart';
 import 'module_player_screen.dart';
 
@@ -30,9 +31,15 @@ class CourseDetailScreen extends StatelessWidget {
       appBar: AppBar(title: Text(path.title)),
       body: user == null
           ? const Center(child: Text('No user found.'))
-          : StreamBuilder(
-              stream: FirestoreService().queryModulesForPath(path.id).snapshots(),
-              builder: (context, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> modulesSnap) {
+          : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirestoreService().queryUserEnrollments(user.uid).snapshots(),
+              builder: (context, enrollSnap) {
+                final enrollments = (enrollSnap.data?.docs ?? []).map(UserEnrollment.fromDoc).toList();
+                final isEnrolled = enrollments.any((e) => e.status == 'active' && e.pathId == path.id);
+
+                return StreamBuilder(
+                  stream: FirestoreService().queryModulesForPath(path.id).snapshots(),
+                  builder: (context, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> modulesSnap) {
                 if (modulesSnap.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
@@ -131,6 +138,39 @@ class CourseDetailScreen extends StatelessWidget {
                             ],
                           ),
                         ),
+
+                        if (!isEnrolled) ...[
+                          const SizedBox(height: 14),
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: cs.primary.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: cs.primary.withValues(alpha: 0.14)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.lock_rounded, color: cs.primary),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'Enroll to unlock modules and start learning.',
+                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                          color: Colors.black.withValues(alpha: 0.70),
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  ),
+                                ),
+                                FilledButton(
+                                  onPressed: () async {
+                                    await FirestoreService().enrollInPath(uid: user.uid, pathId: path.id);
+                                  },
+                                  child: const Text('Enroll'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 18),
 
                         Text(
@@ -189,7 +229,7 @@ class CourseDetailScreen extends StatelessWidget {
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
-                                        '${m.durationMinutes} min',
+                                        '${m.durationMinutes} min • ${m.xp} XP',
                                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                               color: Colors.black.withValues(alpha: 0.6),
                                             ),
@@ -199,16 +239,18 @@ class CourseDetailScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(width: 10),
                                 FilledButton.tonal(
-                                  onPressed: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (_) => ModulePlayerScreen(
-                                          path: path,
-                                          module: m,
-                                        ),
-                                      ),
-                                    );
-                                  },
+                                  onPressed: isEnrolled
+                                      ? () {
+                                          Navigator.of(context).push(
+                                            MaterialPageRoute(
+                                              builder: (_) => ModulePlayerScreen(
+                                                path: path,
+                                                module: m,
+                                              ),
+                                            ),
+                                          );
+                                        }
+                                      : null,
                                   child: Text(done ? 'Replay' : 'Start'),
                                 ),
                               ],
@@ -217,6 +259,8 @@ class CourseDetailScreen extends StatelessWidget {
                         }),
                       ],
                     );
+                  },
+                );
                   },
                 );
               },

@@ -15,6 +15,23 @@ class FirestoreService {
   CollectionReference<Map<String, dynamic>> get _enrollments => _db.collection('user_enrollments');
   CollectionReference<Map<String, dynamic>> get _progress => _db.collection('user_progress');
 
+  String _userProgressDocId({
+    required String uid,
+    required String pathId,
+    required String moduleId,
+  }) {
+    // Firestore doc IDs cannot contain '/', so joining like this is safe.
+    return '${uid}_${pathId}_$moduleId';
+  }
+
+  DocumentReference<Map<String, dynamic>> userProgressDoc({
+    required String uid,
+    required String pathId,
+    required String moduleId,
+  }) {
+    return _progress.doc(_userProgressDocId(uid: uid, pathId: pathId, moduleId: moduleId));
+  }
+
   /// Ensure `users/{uid}` exists (create if missing).
   ///
   /// This is the backbone for the production flow:
@@ -23,15 +40,40 @@ class FirestoreService {
     final ref = _users.doc(user.uid);
     final snap = await ref.get();
 
-    if (snap.exists) return;
+    final current = (snap.data() ?? <String, dynamic>{});
+
+    final hasDisplayName = (current['displayName'] as String?)?.trim().isNotEmpty == true;
+    final hasFirstName = (current['firstName'] as String?)?.trim().isNotEmpty == true;
+    final hasLastName = (current['lastName'] as String?)?.trim().isNotEmpty == true;
+
+    final authDisplayName = user.displayName?.trim();
+    final shouldSetNameFromAuth =
+        !hasDisplayName && !hasFirstName && (authDisplayName != null && authDisplayName.isNotEmpty);
+
+    // Very simple parsing: first token => firstName, rest => lastName.
+    String? parsedFirst;
+    String? parsedLast;
+    if (shouldSetNameFromAuth) {
+      final parts = authDisplayName.split(RegExp(r'\s+')).where((p) => p.trim().isNotEmpty).toList();
+      if (parts.isNotEmpty) {
+        parsedFirst = parts.first;
+        parsedLast = parts.length > 1 ? parts.sublist(1).join(' ') : null;
+      }
+    }
 
     await ref.set({
       'uid': user.uid,
       'email': user.email,
-      'onboardingCompleted': false,
+      // Initialize onboarding only if missing.
+      if (!current.containsKey('onboardingCompleted')) 'onboardingCompleted': false,
       // Dashboard defaults
-      'xp': 0,
-      'createdAt': FieldValue.serverTimestamp(),
+      if (!current.containsKey('xp')) 'xp': 0,
+      if (!snap.exists) 'createdAt': FieldValue.serverTimestamp(),
+
+      // Populate name from Google Auth only when user doc doesn't already have it.
+      if (shouldSetNameFromAuth) 'displayName': authDisplayName,
+      if (shouldSetNameFromAuth && parsedFirst != null) 'firstName': parsedFirst,
+      if (shouldSetNameFromAuth && parsedLast != null && !hasLastName) 'lastName': parsedLast,
     }, SetOptions(merge: true));
   }
 
@@ -135,35 +177,42 @@ class FirestoreService {
     return _progress.where('userId', isEqualTo: uid).where('pathId', isEqualTo: pathId);
   }
 
-  Future<void> markModuleCompleted({
+  /// Stream all completed progress for a user (across all paths).
+  Query<Map<String, dynamic>> queryCompletedUserProgress(String uid) {
+    return _progress.where('userId', isEqualTo: uid).where('completed', isEqualTo: true);
+  }
+
+  /// Mark a module completed.
+  ///
+  /// Writes/merges a single deterministic document in `user_progress` to prevent duplicates.
+  /// Returns `true` when this call performed the completion write, `false` if it was already completed.
+  Future<bool> markModuleCompleted({
     required String uid,
     required String pathId,
     required String moduleId,
     String? reflection,
-    required int xpReward,
+    int xpReward = 0,
   }) async {
-    // Deduplicate: if already completed, don't add XP again.
-    final existing = await _progress
-        .where('userId', isEqualTo: uid)
-        .where('pathId', isEqualTo: pathId)
-        .where('moduleId', isEqualTo: moduleId)
-        .where('completed', isEqualTo: true)
-        .limit(1)
-        .get();
+    final ref = userProgressDoc(uid: uid, pathId: pathId, moduleId: moduleId);
+    final snap = await ref.get();
+    final alreadyCompleted = (snap.data()?['completed'] == true);
+    if (alreadyCompleted) return false;
 
-    if (existing.docs.isEmpty) {
-      await _progress.add({
-        'userId': uid,
-        'pathId': pathId,
-        'moduleId': moduleId,
-        'completed': true,
-        if (reflection != null && reflection.trim().isNotEmpty)
-          'reflection': reflection.trim(),
-        'completedAt': FieldValue.serverTimestamp(),
-      });
+    await ref.set({
+      'userId': uid,
+      'pathId': pathId,
+      'moduleId': moduleId,
+      'completed': true,
+      if (reflection != null && reflection.trim().isNotEmpty) 'reflection': reflection.trim(),
+      'completedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
+    // Phase 2 Step 3 said "No XP yet". Keep XP off by default unless a positive reward is supplied.
+    if (xpReward > 0) {
       await addXp(uid: uid, delta: xpReward);
     }
+
+    return true;
   }
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> streamUserDoc(String uid) {

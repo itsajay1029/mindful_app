@@ -2,10 +2,14 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'screens/auth_gate.dart';
+import 'services/local_notification_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+
+  // Local notifications (Phase 2 daily reminder). Safe to call multiple times.
+  await LocalNotificationService.instance.init();
   runApp(const MindfulApp());
 }
 

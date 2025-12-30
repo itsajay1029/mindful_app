@@ -3,15 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/learning_path.dart';
+import '../models/learning_module.dart';
+import '../models/recommendation.dart';
 import '../models/user_enrollment.dart';
+import '../models/user_progress.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../services/local_notification_service.dart';
+import '../services/recommendation_service.dart';
 import '../widgets/dashboard/course_card.dart';
 import '../widgets/dashboard/kpi_card.dart';
 import '../widgets/dashboard/section_header.dart';
 import 'auth_gate.dart';
 import 'course_detail_screen.dart';
 import 'learning_hub_screen.dart';
+import 'module_player_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -24,8 +30,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final _authService = AuthService();
 
   final _firestore = FirestoreService();
+  final _reco = RecommendationService();
 
   bool _busy = false;
+  bool _scheduledReminder = false;
+
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+
+    // Schedule once per app session (Phase 2). Uses same notification ID so it won't duplicate.
+    if (!_scheduledReminder) {
+      _scheduledReminder = true;
+      LocalNotificationService.instance.scheduleDailyReminder();
+    }
+  }
 
   Future<void> _signOut() async {
     setState(() {
@@ -69,11 +96,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   final data = (userDocSnap.data?.data() as Map<String, dynamic>?) ??
                       <String, dynamic>{};
 
-                  final displayName = (data['displayName'] as String?)?.trim().isNotEmpty == true
-                      ? (data['displayName'] as String).trim()
-                      : ((data['firstName'] as String?)?.trim().isNotEmpty == true
-                          ? (data['firstName'] as String).trim()
-                          : '');
+                  // Show only first name on Dashboard greeting.
+                  // Priority: firstName (from signup / parsed google name) -> displayName (first token) -> ''
+                  final firstName = (data['firstName'] as String?)?.trim() ?? '';
+                  final displayNameRaw = (data['displayName'] as String?)?.trim() ?? '';
+                  final displayFirstToken = displayNameRaw.isEmpty
+                      ? ''
+                      : displayNameRaw.split(RegExp(r'\s+')).first.trim();
+                  final greetingName = firstName.isNotEmpty ? firstName : displayFirstToken;
 
                   final interestsRaw = (data['interests'] as List?)?.cast<String>() ?? <String>[];
                   final interests = interestsRaw
@@ -81,7 +111,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       .where((e) => e.isNotEmpty)
                       .toList();
                   final xp = (data['xp'] as num?)?.toInt() ?? 0;
-                  final showGreetingName = displayName.isNotEmpty;
+                  final showGreetingName = greetingName.isNotEmpty;
 
                   return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
                     stream: _firestore.queryUserEnrollments(user.uid).snapshots(),
@@ -109,14 +139,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           final featured = paths.take(3).toList();
                           final myCourses = paths.where((p) => enrolledPathIds.contains(p.id)).take(3).toList();
 
-                          return CustomScrollView(
-                            slivers: [
+                          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                            stream: _firestore.queryCompletedUserProgress(user.uid).snapshots(),
+                            builder: (context, progressSnap) {
+                              final completed = (progressSnap.data?.docs ?? [])
+                                  .map(UserProgress.fromDoc)
+                                  .where((p) => p.completed)
+                                  .toList();
+
+                              return CustomScrollView(
+                                controller: _scrollController,
+                                slivers: [
                               SliverToBoxAdapter(
                                 child: _DashboardHeader(
-                                  name: showGreetingName ? displayName : null,
-                                  subtitle: interests.isNotEmpty
-                                      ? 'Your focus: ${_prettyInterest(interests.first)}'
-                                      : 'Pick a course to start learning',
+                                  // only first name
+                                  name: showGreetingName ? greetingName : null,
+                                  interests: interests.map(_prettyInterest).toList(),
+                                  subtitle: interests.isNotEmpty ? null : 'Pick a course to start learning',
                                   onOpenLearningHub: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(builder: (_) => const LearningHubScreen()),
@@ -146,6 +185,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                         onTap: () {},
                                       ),
                                     ],
+                                  ),
+                                ),
+                              ),
+
+                              const SliverToBoxAdapter(child: SizedBox(height: 18)),
+
+                              // ===== Recommendation (Phase 2) =====
+                              SliverPadding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                sliver: SliverToBoxAdapter(
+                                  child: SectionHeader(
+                                    title: 'Recommended for you',
+                                    onSeeAll: null,
+                                  ),
+                                ),
+                              ),
+                              SliverPadding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16),
+                                sliver: SliverToBoxAdapter(
+                                  child: _RecommendationCard(
+                                    userId: user.uid,
+                                    enrollments: enrollments,
+                                    paths: paths,
+                                    completedProgress: completed,
+                                    firestore: _firestore,
+                                    recompute: _reco,
                                   ),
                                 ),
                               ),
@@ -196,7 +261,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                                   ),
                                                 );
                                               },
-                                              child: const Text('View'),
+                                  child: Text(enrolledPathIds.contains(p.id) ? 'Continue' : 'View'),
                                             ),
                                           );
                                         },
@@ -267,7 +332,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               ),
 
                               const SliverToBoxAdapter(child: SizedBox(height: 24)),
-                            ],
+                                ],
+                              );
+                            },
                           );
                         },
                       );
@@ -280,17 +347,176 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 }
 
+class _RecommendationCard extends StatelessWidget {
+  const _RecommendationCard({
+    required this.userId,
+    required this.enrollments,
+    required this.paths,
+    required this.completedProgress,
+    required this.firestore,
+    required this.recompute,
+  });
+
+  final String userId;
+  final List<UserEnrollment> enrollments;
+  final List<LearningPath> paths;
+  final List<UserProgress> completedProgress;
+  final FirestoreService firestore;
+  final RecommendationService recompute;
+
+  @override
+  Widget build(BuildContext context) {
+    // We need modules to apply Rule 1. Fetch modules for enrolled paths only.
+    final enrolledPathIds = enrollments.where((e) => e.status == 'active').map((e) => e.pathId).toSet();
+    final activePaths = paths.where((p) => p.isActive).toList()..sort((a, b) => a.order.compareTo(b.order));
+    final relevantPathIds = enrolledPathIds.isEmpty ? {if (activePaths.isNotEmpty) activePaths.first.id} : enrolledPathIds;
+
+    // Ensure deterministic iteration order.
+    final relevantPathIdsList = activePaths
+        .where((p) => relevantPathIds.contains(p.id))
+        .map((p) => p.id)
+        .toList();
+
+    return StreamBuilder<List<QuerySnapshot<Map<String, dynamic>>>>(
+      stream: Stream.fromFuture(
+        Future.wait(
+          relevantPathIdsList.map((pid) => firestore.queryModulesForPath(pid).get()),
+        ),
+      ),
+      builder: (context, modulesSnap) {
+        final modulesByPathId = <String, List<LearningModule>>{};
+
+        if (modulesSnap.connectionState == ConnectionState.waiting) {
+          return const _EmptyStateCard(
+            title: 'Loading recommendation…',
+            subtitle: 'Preparing your next best action.',
+          );
+        }
+
+        if (modulesSnap.hasError) {
+          return _EmptyStateCard(
+            title: 'Failed to load recommendation',
+            subtitle: modulesSnap.error.toString(),
+          );
+        }
+
+        if (modulesSnap.hasData) {
+          final results = modulesSnap.data!;
+          int idx = 0;
+          for (final pid in relevantPathIdsList) {
+            final docs = results[idx].docs;
+            modulesByPathId[pid] = docs.map(LearningModule.fromDoc).toList();
+            idx++;
+          }
+        }
+
+        final reco = recompute.compute(
+          enrollments: enrollments,
+          paths: paths,
+          modulesByPathId: modulesByPathId,
+          completedProgress: completedProgress,
+        );
+
+        if (reco == null) {
+          return const _EmptyStateCard(
+            title: 'No recommendation yet',
+            subtitle: 'Add learning paths and modules in Firestore to get started.',
+          );
+        }
+
+        return InkWell(
+          onTap: () {
+            if (reco.type == RecommendationType.module && reco.module != null) {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ModulePlayerScreen(path: reco.path, module: reco.module!),
+                ),
+              );
+            } else {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => CourseDetailScreen(path: reco.path),
+                ),
+              );
+            }
+          },
+          borderRadius: BorderRadius.circular(18),
+          child: Ink(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 18,
+                  offset: const Offset(0, 10),
+                  color: Colors.black.withValues(alpha: 0.06),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  height: 44,
+                  width: 44,
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    reco.type == RecommendationType.module
+                        ? Icons.play_circle_fill_rounded
+                        : Icons.school_rounded,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        reco.label,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w900,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        reco.path.title,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.black.withValues(alpha: 0.6),
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(Icons.arrow_forward_ios_rounded,
+                    size: 16, color: Colors.black.withValues(alpha: 0.35)),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _DashboardHeader extends StatelessWidget {
   const _DashboardHeader({
     required this.name,
-    required this.subtitle,
+    required this.interests,
+    this.subtitle,
     required this.busy,
     required this.onSignOut,
     required this.onOpenLearningHub,
   });
 
   final String? name;
-  final String subtitle;
+  final List<String> interests;
+  final String? subtitle;
   final bool busy;
   final VoidCallback onSignOut;
   final VoidCallback onOpenLearningHub;
@@ -336,20 +562,70 @@ class _DashboardHeader extends StatelessWidget {
                             fontWeight: FontWeight.w700,
                           ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.white.withValues(alpha: 0.90),
-                          ),
-                    ),
+                    const SizedBox(height: 6),
+                    if (interests.isNotEmpty) ...[
+                      Text(
+                        'Your interests',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.85),
+                              fontWeight: FontWeight.w700,
+                            ),
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: interests
+                            .where((e) => e.trim().isNotEmpty)
+                            .map(
+                              (i) => _HeaderChip(label: i),
+                            )
+                            .toList(),
+                      ),
+                    ] else if (subtitle != null) ...[
+                      Text(
+                        subtitle!,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.90),
+                            ),
+                      ),
+                    ],
                   ],
                 ),
               ),
-              IconButton(
-                onPressed: busy ? null : onSignOut,
-                icon: const Icon(Icons.logout_rounded, color: Colors.white),
-                tooltip: 'Sign out',
+              IgnorePointer(
+                ignoring: busy,
+                child: PopupMenuButton<String>(
+                  tooltip: 'Menu',
+                  onSelected: (value) {
+                    if (value == 'signout') onSignOut();
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem(
+                      value: 'signout',
+                      child: Row(
+                        children: [
+                          Icon(Icons.logout_rounded, color: cs.primary),
+                          const SizedBox(width: 10),
+                          const Text('Sign out'),
+                        ],
+                      ),
+                    ),
+                  ],
+                  child: Container(
+                    height: 40,
+                    width: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+                    ),
+                    child: Icon(
+                      Icons.more_horiz_rounded,
+                      color: Colors.white.withValues(alpha: 0.95),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
@@ -397,6 +673,31 @@ class _DashboardHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _HeaderChip extends StatelessWidget {
+  const _HeaderChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: Colors.white.withValues(alpha: 0.95),
+              fontWeight: FontWeight.w700,
+            ),
       ),
     );
   }
