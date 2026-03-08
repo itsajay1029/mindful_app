@@ -10,10 +10,21 @@ class FirestoreService {
 
   CollectionReference<Map<String, dynamic>> get _users => _db.collection('users');
 
+  /// Public profile docs used for leaderboard.
+  ///
+  /// We intentionally do NOT expose `users/{uid}` publicly because it may contain
+  /// sensitive fields (email, minutesPerDay, etc.).
+  CollectionReference<Map<String, dynamic>> get _publicUsers => _db.collection('public_users');
+
   CollectionReference<Map<String, dynamic>> get _paths => _db.collection('learning_paths');
   CollectionReference<Map<String, dynamic>> get _modules => _db.collection('modules');
   CollectionReference<Map<String, dynamic>> get _enrollments => _db.collection('user_enrollments');
   CollectionReference<Map<String, dynamic>> get _progress => _db.collection('user_progress');
+
+  // ===== Gamified platform (Phase 3) collections =====
+  CollectionReference<Map<String, dynamic>> get _segments => _db.collection('segments');
+  CollectionReference<Map<String, dynamic>> get _activities => _db.collection('activities');
+  CollectionReference<Map<String, dynamic>> get _sprintCompletions => _db.collection('sprint_completions');
 
   String _userProgressDocId({
     required String uid,
@@ -68,6 +79,10 @@ class FirestoreService {
       if (!current.containsKey('onboardingCompleted')) 'onboardingCompleted': false,
       // Dashboard defaults
       if (!current.containsKey('xp')) 'xp': 0,
+      // Streak defaults (gamification)
+      if (!current.containsKey('streakCurrent')) 'streakCurrent': 0,
+      if (!current.containsKey('streakBest')) 'streakBest': 0,
+      if (!current.containsKey('lastSprintDate')) 'lastSprintDate': null,
       if (!snap.exists) 'createdAt': FieldValue.serverTimestamp(),
 
       // Populate name from Google Auth only when user doc doesn't already have it.
@@ -75,6 +90,21 @@ class FirestoreService {
       if (shouldSetNameFromAuth && parsedFirst != null) 'firstName': parsedFirst,
       if (shouldSetNameFromAuth && parsedLast != null && !hasLastName) 'lastName': parsedLast,
     }, SetOptions(merge: true));
+
+    // Keep a public profile doc for leaderboards.
+    // IMPORTANT: This must not break app startup if rules are not deployed yet.
+    try {
+      await _publicUsers.doc(user.uid).set({
+        'uid': user.uid,
+        'displayName': (current['displayName'] as String?) ?? user.displayName ?? 'Player',
+        'xp': (current['xp'] as num?)?.toInt() ?? 0,
+        'streakCurrent': (current['streakCurrent'] as num?)?.toInt() ?? 0,
+        'streakBest': (current['streakBest'] as num?)?.toInt() ?? 0,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (_) {
+      // Best-effort only.
+    }
   }
 
   /// Upsert basic profile fields (safe to call multiple times).
@@ -100,12 +130,117 @@ class FirestoreService {
     }, SetOptions(merge: true));
   }
 
-  /// Convenience helper to update XP.
-  Future<void> addXp({required String uid, required int delta}) {
-    return _users.doc(uid).set({
-      'xp': FieldValue.increment(delta),
+  Future<void> upsertPublicProfile({
+    required String uid,
+    required String displayName,
+  }) {
+    return _publicUsers.doc(uid).set({
+      'uid': uid,
+      'displayName': displayName.trim().isEmpty ? 'Player' : displayName.trim(),
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
+  }
+
+  /// Convenience helper to update XP.
+  Future<void> addXp({required String uid, required int delta}) {
+    return Future.wait([
+      _users.doc(uid).set({
+        'xp': FieldValue.increment(delta),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)),
+      // Best-effort mirror for leaderboard.
+      _publicUsers.doc(uid).set({
+        'xp': FieldValue.increment(delta),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).catchError((_) {}),
+    ]).then((_) => null);
+  }
+
+  /// Complete the Daily Sprint for [dateKey] (yyyy-MM-dd), awarding XP and updating streak.
+  ///
+  /// - idempotent per-day: if already completed today, returns false.
+  /// - streak rules:
+  ///   - if lastSprintDate == yesterday -> streakCurrent++
+  ///   - else -> streakCurrent=1
+  ///   - streakBest = max(streakBest, streakCurrent)
+  Future<bool> completeDailySprint({
+    required String uid,
+    required String dateKey,
+    required int xpAward,
+    String? segmentId,
+  }) async {
+    final completionId = '${uid}_$dateKey';
+    final completionRef = _sprintCompletions.doc(completionId);
+    final userRef = _users.doc(uid);
+
+    // We keep the transaction limited to user-owned collections so it never fails
+    // due to missing public leaderboard rules.
+    final didComplete = await _db.runTransaction((tx) async {
+      final completionSnap = await tx.get(completionRef);
+      if (completionSnap.exists) {
+        return false;
+      }
+
+      final userSnap = await tx.get(userRef);
+      final data = userSnap.data() ?? <String, dynamic>{};
+
+      final last = (data['lastSprintDate'] as String?)?.trim();
+      final currentStreak = (data['streakCurrent'] as num?)?.toInt() ?? 0;
+      final bestStreak = (data['streakBest'] as num?)?.toInt() ?? 0;
+
+      // Compute yesterday key from dateKey (yyyy-MM-dd)
+      DateTime parseKey(String k) => DateTime.parse(k);
+      String keyOf(DateTime d) =>
+          '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+      final today = parseKey(dateKey);
+      final yesterdayKey = keyOf(today.subtract(const Duration(days: 1)));
+
+      final nextStreak = (last == yesterdayKey) ? (currentStreak + 1) : 1;
+      final nextBest = nextStreak > bestStreak ? nextStreak : bestStreak;
+
+      tx.set(completionRef, {
+        'userId': uid,
+        'dateKey': dateKey,
+        if (segmentId != null) 'segmentId': segmentId,
+        'xpAward': xpAward,
+        'completedAt': FieldValue.serverTimestamp(),
+      });
+
+      tx.set(userRef, {
+        'xp': FieldValue.increment(xpAward),
+        'streakCurrent': nextStreak,
+        'streakBest': nextBest,
+        'lastSprintDate': dateKey,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      return true;
+    });
+
+    // Best-effort mirror to public_users.
+    if (didComplete) {
+      await _publicUsers.doc(uid).set({
+        'uid': uid,
+        'xp': FieldValue.increment(xpAward),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).catchError((_) {});
+    }
+
+    return didComplete;
+  }
+
+  /// Leaderboard query (by XP). Reads from `public_users`.
+  Query<Map<String, dynamic>> queryLeaderboard({int limit = 50}) {
+    return _publicUsers.orderBy('xp', descending: true).limit(limit);
+  }
+
+  /// Content queries (segments/activities).
+  Query<Map<String, dynamic>> queryActiveSegments() {
+    return _segments.where('isActive', isEqualTo: true).orderBy('order');
+  }
+
+  Query<Map<String, dynamic>> queryActivitiesForSegment(String segmentId) {
+    return _activities.where('segmentId', isEqualTo: segmentId).where('isActive', isEqualTo: true).orderBy('order');
   }
 
 

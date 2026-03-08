@@ -52,3 +52,20 @@ dependencies {
 flutter {
     source = "../.."
 }
+
+// --- Windows/OneDrive workaround ---
+// If the project is inside OneDrive, some generated build artifacts can become
+// reparse points (placeholders) instead of regular files. Gradle's state
+// tracking then fails with errors like:
+//   "Cannot snapshot ... ink_sparkle.frag: not a regular file"
+// Mark Flutter's compile tasks as untracked so Gradle won't attempt to snapshot
+// these outputs.
+//
+// Prefer the real fix: move the project out of OneDrive / exclude build folders
+// from syncing and antivirus.
+afterEvaluate {
+    tasks.matching { it.name.startsWith("compileFlutterBuild") }.configureEach {
+        // Gradle 8+ API
+        doNotTrackState("Workaround for OneDrive/Windows reparse-point build outputs")
+    }
+}

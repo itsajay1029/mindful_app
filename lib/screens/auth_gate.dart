@@ -2,7 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 import '../services/firestore_service.dart';
-import 'dashboard_screen.dart';
+import 'app_shell.dart';
 import 'login_screen.dart';
 import 'onboarding_screen.dart';
 
@@ -124,7 +124,7 @@ class _EnsureUserDocAndRouteState extends State<_EnsureUserDocAndRoute> {
             final data = (userDocSnap.data?.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
             final onboardingCompleted = data['onboardingCompleted'] == true;
 
-            return onboardingCompleted ? const DashboardScreen() : const OnboardingScreen();
+            return onboardingCompleted ? const AppShell() : const OnboardingScreen();
           },
         );
       },

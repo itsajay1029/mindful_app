@@ -8,6 +8,21 @@ enum UserRole { individual, manager }
 
 enum Interest { leadership, wellbeing, sustainability }
 
+// New segment taxonomy (MVP) – matches client’s requested skills list.
+enum SegmentInterest {
+  problemSolving,
+  communication,
+  conflictResolution,
+  wellBeing,
+  teamManagement,
+  emotionalIntelligence,
+  activeListening,
+  selfAwareness,
+  resilience,
+  purpose,
+  reflection,
+}
+
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -21,7 +36,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   int _step = 0;
 
   UserRole? _role;
-  final Set<Interest> _interests = <Interest>{};
+  final Set<SegmentInterest> _interests = <SegmentInterest>{};
   int? _minutesPerDay;
 
   bool _busy = false;
@@ -40,11 +55,19 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
-  String _interestLabel(Interest i) {
+  String _interestLabel(SegmentInterest i) {
     return switch (i) {
-      Interest.leadership => 'Leadership',
-      Interest.wellbeing => 'Well-being',
-      Interest.sustainability => 'Sustainability',
+      SegmentInterest.problemSolving => 'Problem Solving',
+      SegmentInterest.communication => 'Communication',
+      SegmentInterest.conflictResolution => 'Conflict Resolution',
+      SegmentInterest.wellBeing => 'Well Being',
+      SegmentInterest.teamManagement => 'Team Management',
+      SegmentInterest.emotionalIntelligence => 'Emotional intelligence',
+      SegmentInterest.activeListening => 'Active Listening',
+      SegmentInterest.selfAwareness => 'Self Awareness',
+      SegmentInterest.resilience => 'Resilience and Adaptability',
+      SegmentInterest.purpose => 'Purpose',
+      SegmentInterest.reflection => 'Reflection',
     };
   }
 
@@ -148,7 +171,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         );
       case 1:
         return Column(
-          children: Interest.values.map((interest) {
+          children: SegmentInterest.values.map((interest) {
             final selected = _interests.contains(interest);
             return CheckboxListTile(
               title: Text(_interestLabel(interest)),

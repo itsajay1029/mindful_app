@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/services.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 
@@ -75,16 +76,38 @@ class LocalNotificationService {
     final scheduled = _nextInstanceOfEightPm();
 
     // Overwrite the same ID so we never create duplicates.
-    await _plugin.zonedSchedule(
-      _dailyReminderId,
-      title,
-      body,
-      scheduled,
-      details,
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
+    //
+    // NOTE:
+    // On Android 12+ (especially Android 14/15), using an *exact* schedule
+    // requires the SCHEDULE_EXACT_ALARM permission / user approval.
+    // If the app doesn't have it, flutter_local_notifications can throw:
+    //   PlatformException(exact_alarms_not_permitted, ...)
+    //
+    // To avoid crashing the app at startup, we use an inexact schedule.
+    // (Real fix: if you truly need exact delivery, request exact alarm
+    // permission and declare it in AndroidManifest.)
+    try {
+      await _plugin.zonedSchedule(
+        _dailyReminderId,
+        title,
+        body,
+        scheduled,
+        details,
+        androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+        uiLocalNotificationDateInterpretation: UILocalNotificationDateInterpretation.absoluteTime,
+        matchDateTimeComponents: DateTimeComponents.time,
+      );
+    } on PlatformException catch (e) {
+      if (kDebugMode) {
+        // ignore: avoid_print
+        print('Failed to schedule daily reminder: ${e.code} ${e.message}');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        // ignore: avoid_print
+        print('Failed to schedule daily reminder: $e');
+      }
+    }
 
     if (kDebugMode) {
       // ignore: avoid_print
@@ -101,4 +124,5 @@ class LocalNotificationService {
     return scheduled;
   }
 }
+
 

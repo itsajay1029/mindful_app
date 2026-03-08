@@ -50,6 +50,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // Schedule once per app session (Phase 2). Uses same notification ID so it won't duplicate.
     if (!_scheduledReminder) {
       _scheduledReminder = true;
+      // Fire-and-forget; service internally handles missing Android permissions.
       LocalNotificationService.instance.scheduleDailyReminder();
     }
   }
