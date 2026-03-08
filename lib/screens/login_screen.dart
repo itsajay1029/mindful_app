@@ -160,11 +160,17 @@ class _LoginScreenState extends State<LoginScreen> {
     final cs = Theme.of(context).colorScheme;
     final media = MediaQuery.of(context);
     final h = media.size.height;
+    final textScale = media.textScaler.scale(1.0);
 
     // Responsive header sizing so the top title never collides with the card.
-    final headerHeight = (h * 0.30).clamp(220.0, 280.0);
-    final headerTopSpacing = (h * 0.06).clamp(12.0, 28.0);
-    final headerToCardSpacing = (h * 0.04).clamp(12.0, 22.0);
+    // We also account for larger accessibility text sizes so the gradient always covers
+    // both lines (e.g. "Welcome Back" + "Log In!").
+    //
+    // Key idea: keep the header text visually anchored near the top, while extending the
+    // gradient enough so the big headline never lands on the white background.
+    final headerHeight = ((h * 0.38).clamp(300.0, 380.0) + (textScale - 1.0) * 90.0);
+    final headerTopSpacing = (h * 0.04).clamp(12.0, 20.0);
+    final headerToCardSpacing = (h * 0.05).clamp(18.0, 28.0);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -193,12 +199,14 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
 
           SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+            // IMPORTANT: Do not wrap in Center.
+            // On tall screens, Center pushes the header down so the white title text can end up
+            // partially over the white background (making "Log In!" look hidden).
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                     SizedBox(height: headerTopSpacing),
                     Text(
                       _isSignUp ? 'Create account,' : 'Welcome Back,',
@@ -482,8 +490,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             color: Colors.white,
                           ),
                     ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),

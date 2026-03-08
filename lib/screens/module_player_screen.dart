@@ -6,6 +6,7 @@ import '../models/learning_module.dart';
 import '../models/learning_path.dart';
 import '../models/user_enrollment.dart';
 import '../services/firestore_service.dart';
+import '../widgets/video/modern_video_player.dart';
 
 /// Module Player
 ///
@@ -108,6 +109,14 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
   Future<void> _initVideo() async {
     try {
       await _videoController.initialize();
+
+      // Always start from the beginning for a predictable course experience.
+      await _videoController.seekTo(Duration.zero);
+
+      // Autoplay on open (modern app behavior). If you want manual start,
+      // remove this line.
+      await _videoController.play();
+
       if (!mounted) return;
       setState(() {
         _videoError = null;
@@ -122,6 +131,9 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
 
   @override
   void dispose() {
+    // Prevent background playback when leaving the screen.
+    // (If you ever want background playback, remove this.)
+    _videoController.pause();
     _videoController.dispose();
     _reflectionController.dispose();
     super.dispose();
@@ -160,8 +172,6 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isReady = _videoController.value.isInitialized;
-
     if (_checkingEnrollment) {
       return const Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -248,87 +258,58 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Video player
-            ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                color: Colors.black,
-                height: 220,
-                child: _videoError != null
-                    ? Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error_outline, color: Colors.white, size: 28),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Unable to load video',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                  ),
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              _videoError!,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.white.withValues(alpha: 0.75),
-                                  ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 10),
-                            FilledButton.tonal(
-                              onPressed: _initVideo,
-                              style: FilledButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.black,
-                              ),
-                              child: const Text('Retry'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : isReady
-                        ? Stack(
-                            alignment: Alignment.center,
+            SizedBox(
+              height: 220,
+              child: _videoError != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(18),
+                      child: Container(
+                        color: Colors.black,
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              FittedBox(
-                                fit: BoxFit.cover,
-                                child: SizedBox(
-                                  width: _videoController.value.size.width,
-                                  height: _videoController.value.size.height,
-                                  child: VideoPlayer(_videoController),
-                                ),
+                              const Icon(Icons.error_outline, color: Colors.white, size: 28),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Unable to load video',
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                textAlign: TextAlign.center,
                               ),
-                              IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _videoController.value.isPlaying
-                                        ? _videoController.pause()
-                                        : _videoController.play();
-                                  });
-                                },
-                                iconSize: 64,
-                                icon: Icon(
-                                  _videoController.value.isPlaying
-                                      ? Icons.pause_circle_filled
-                                      : Icons.play_circle_filled,
-                                  color: Colors.white.withValues(alpha: 0.92),
+                              const SizedBox(height: 6),
+                              Text(
+                                _videoError!,
+                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                      color: Colors.white.withValues(alpha: 0.75),
+                                    ),
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 10),
+                              FilledButton.tonal(
+                                onPressed: _initVideo,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  foregroundColor: Colors.black,
                                 ),
+                                child: const Text('Retry'),
                               ),
                             ],
-                          )
-                        : const Center(
-                            child: SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
                           ),
-              ),
+                        ),
+                      ),
+                    )
+                  : ModernVideoPlayer(
+                      controller: _videoController,
+                      borderRadius: 18,
+                      allowFullscreen: true,
+                      showSkipButtons: true,
+                    ),
             ),
             const SizedBox(height: 16),
             Text(

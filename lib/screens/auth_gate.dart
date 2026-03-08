@@ -49,6 +49,22 @@ class _EnsureUserDocAndRoute extends StatefulWidget {
 class _EnsureUserDocAndRouteState extends State<_EnsureUserDocAndRoute> {
   late Future<void> _ensureFuture;
 
+  String _friendlyError(Object error) {
+    // Cloud Firestore errors come through as FirebaseException (plugin: cloud_firestore)
+    if (error is FirebaseException && error.plugin == 'cloud_firestore') {
+      if (error.code == 'permission-denied') {
+        return 'Firestore permission denied. This usually means your Firestore Security Rules do not allow the signed-in user to read/write their profile document.';
+      }
+      return 'Firestore error (${error.code}): ${error.message ?? error.toString()}';
+    }
+
+    final msg = error.toString();
+    if (msg.contains('permission-denied')) {
+      return 'Firestore permission denied. Please verify your Firestore Security Rules.';
+    }
+    return msg;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -74,7 +90,13 @@ class _EnsureUserDocAndRouteState extends State<_EnsureUserDocAndRoute> {
         if (snap.hasError) {
           return Scaffold(
             body: Center(
-              child: Text('Failed to initialize user profile: ${snap.error}'),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  'Failed to initialize user profile.\n\n${_friendlyError(snap.error!)}',
+                  textAlign: TextAlign.center,
+                ),
+              ),
             ),
           );
         }
@@ -87,7 +109,15 @@ class _EnsureUserDocAndRouteState extends State<_EnsureUserDocAndRoute> {
             }
             if (userDocSnap.hasError) {
               return Scaffold(
-                body: Center(child: Text('Failed to load profile: ${userDocSnap.error}')),
+                body: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Text(
+                      'Failed to load profile.\n\n${_friendlyError(userDocSnap.error!)}',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
               );
             }
 

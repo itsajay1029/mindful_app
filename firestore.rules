@@ -1,0 +1,64 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // ===== App collections =====
+
+    // User profile
+    match /users/{uid} {
+      allow read, write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // Learning content is public read (or change to `signedIn()` if you want auth required)
+    match /learning_paths/{pathId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    match /modules/{moduleId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Enrollment: each user can only see/change their own enrollment docs
+    match /user_enrollments/{docId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+
+      // Create: userId must match auth.uid
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid;
+
+      // Update: keep ownership; allow status changes
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    // Progress: each user can only see/change their own progress docs
+    match /user_progress/{docId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid;
+
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
+
+      allow delete: if false;
+    }
+
+    // Optional: allow signed-in users to write debug pings
+    match /debug_pings/{docId} {
+      allow create: if signedIn();
+      allow read, update, delete: if false;
+    }
+  }
+}
+
