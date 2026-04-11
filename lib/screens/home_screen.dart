@@ -56,6 +56,15 @@ class _HomeScreenState extends State<HomeScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
+        backgroundColor: EoColors.surfaceContainerLowest,
+        titleTextStyle: Theme.of(ctx).textTheme.titleLarge?.copyWith(
+              color: EoColors.onSurface,
+              fontWeight: FontWeight.w900,
+            ),
+        contentTextStyle: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
+              color: EoColors.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
         title: const Text('Logout?'),
         content: const Text('You will be signed out from this device.'),
         actions: [
@@ -82,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final cs = Theme.of(context).colorScheme;
+    final topInset = MediaQuery.of(context).padding.top;
 
     return Scaffold(
       backgroundColor: EoColors.background,
@@ -149,7 +159,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
           // ===== Content =====
           Padding(
-            padding: const EdgeInsets.only(top: 92),
+            // The floating glass HUD is inside SafeArea, so on devices with
+            // notches/taller status bars the HUD sits lower. Include the top
+            // inset here to avoid overlap.
+            padding: EdgeInsets.only(top: 92 + topInset),
             child: StreamBuilder(
               stream: FirestoreService().streamUserDoc(user.uid),
               builder: (context, snap) {

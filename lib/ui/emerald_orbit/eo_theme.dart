@@ -40,23 +40,34 @@ class EmeraldOrbitTheme {
       scaffoldBackgroundColor: EoColors.background,
     );
 
-    final textTheme = GoogleFonts.plusJakartaSansTextTheme(base.textTheme).copyWith(
-      displayLarge: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      displayMedium: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      displaySmall: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      headlineLarge: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      headlineMedium: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      headlineSmall: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      titleLarge: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      titleMedium: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      titleSmall: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-      bodyLarge: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
-      bodyMedium: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
-      bodySmall: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w500),
-      labelLarge: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      labelMedium: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w800),
-      labelSmall: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-    );
+    // IMPORTANT: Preserve the base text colors coming from ThemeData/ColorScheme.
+    // If we create brand-new TextStyles (via GoogleFonts.plusJakartaSans(...))
+    // we can accidentally drop the computed colors and end up with low-contrast
+    // (often white) text on light surfaces.
+    final textThemeBase = GoogleFonts.plusJakartaSansTextTheme(base.textTheme);
+    final textTheme = textThemeBase
+        .copyWith(
+          displayLarge: textThemeBase.displayLarge?.copyWith(fontWeight: FontWeight.w800),
+          displayMedium: textThemeBase.displayMedium?.copyWith(fontWeight: FontWeight.w800),
+          displaySmall: textThemeBase.displaySmall?.copyWith(fontWeight: FontWeight.w800),
+          headlineLarge: textThemeBase.headlineLarge?.copyWith(fontWeight: FontWeight.w800),
+          headlineMedium: textThemeBase.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
+          headlineSmall: textThemeBase.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+          titleLarge: textThemeBase.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+          titleMedium: textThemeBase.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          titleSmall: textThemeBase.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          bodyLarge: textThemeBase.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
+          bodyMedium: textThemeBase.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+          bodySmall: textThemeBase.bodySmall?.copyWith(fontWeight: FontWeight.w500),
+          labelLarge: textThemeBase.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+          labelMedium: textThemeBase.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+          labelSmall: textThemeBase.labelSmall?.copyWith(fontWeight: FontWeight.w700),
+        )
+        .apply(
+          bodyColor: cs.onSurface,
+          displayColor: cs.onSurface,
+          decorationColor: cs.onSurface,
+        );
 
     return base.copyWith(
       textTheme: textTheme,

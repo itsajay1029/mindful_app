@@ -6,7 +6,8 @@ import 'dart:async';
 import '../models/learning_path.dart';
 import '../models/user_enrollment.dart';
 import '../services/firestore_service.dart';
-import '../widgets/dashboard/course_card.dart';
+import '../ui/emerald_orbit/tokens.dart';
+import '../widgets/dashboard/rich_course_card.dart';
 import 'course_detail_screen.dart';
 
 /// Learning Hub (Courses List)
@@ -33,6 +34,11 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
 
   Timer? _searchDebounce;
   String _query = '';
+
+  // Simple local categories to match Stitch chips.
+  // (We currently only store `category` on LearningPath.)
+  static const _categories = <String>['All Courses', 'Mindset', 'Business', 'Design'];
+  int _selectedCategoryIndex = 0;
 
   final Set<String> _enrollingPathIds = <String>{};
 
@@ -80,6 +86,13 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
         .toList();
   }
 
+  List<LearningPath> _filterByCategory(List<LearningPath> paths) {
+    final selected = _categories[_selectedCategoryIndex];
+    if (selected == 'All Courses') return paths;
+    final target = selected.toLowerCase();
+    return paths.where((p) => p.category.trim().toLowerCase() == target).toList();
+  }
+
   Future<void> _enroll({required String uid, required String pathId}) async {
     if (_enrollingPathIds.contains(pathId)) return;
 
@@ -109,7 +122,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
     _enrollmentsStream ??= _firestore.queryUserEnrollments(user.uid).snapshots();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
+      backgroundColor: EoColors.background,
       appBar: AppBar(
         title: const Text('Learning Hub'),
       ),
@@ -134,42 +147,124 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
               final enrollments = (enrollSnap.data?.docs ?? []).map(UserEnrollment.fromDoc).toList();
               final enrolledPathIds = enrollments.map((e) => e.pathId).toSet();
 
-              final filtered = _filterByTitle(paths, _query);
+              final filtered = _filterByTitle(_filterByCategory(paths), _query);
 
               return Column(
                 children: [
-                  // Optional: search inside learning hub (not personalization)
+                  // Search (Stitch-inspired)
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _searchFocusNode,
-                      onChanged: _onSearchChanged,
-                      textInputAction: TextInputAction.search,
-                      decoration: InputDecoration(
-                        hintText: 'Search courses',
-                        prefixIcon: const Icon(Icons.search),
-                        suffixIcon: _searchController.text.isEmpty
-                            ? null
-                            : IconButton(
-                                onPressed: () {
-                                  _searchController.clear();
-                                  setState(() {
-                                    _query = '';
-                                  });
-                                  _searchFocusNode.requestFocus();
-                                },
-                                icon: const Icon(Icons.close_rounded),
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _searchController,
+                            focusNode: _searchFocusNode,
+                            onChanged: _onSearchChanged,
+                            textInputAction: TextInputAction.search,
+                            decoration: InputDecoration(
+                              hintText: 'Search for courses, skills...',
+                              prefixIcon: Icon(Icons.search_rounded, color: EoColors.onSurfaceVariant),
+                              suffixIcon: _searchController.text.isEmpty
+                                  ? null
+                                  : IconButton(
+                                      onPressed: () {
+                                        _searchController.clear();
+                                        setState(() {
+                                          _query = '';
+                                        });
+                                        _searchFocusNode.requestFocus();
+                                      },
+                                      icon: const Icon(Icons.close_rounded),
+                                    ),
+                              filled: true,
+                              fillColor: EoColors.surfaceContainerLowest,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                borderSide: BorderSide(color: Colors.transparent),
                               ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                borderSide: BorderSide(color: Colors.transparent),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(18),
+                                borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
+                            ),
+                          ),
                         ),
-                      ),
+                        const SizedBox(width: 12),
+                        Container(
+                          height: 56,
+                          width: 56,
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.35),
+                            borderRadius: BorderRadius.circular(18),
+                          ),
+                          child: IconButton(
+                            onPressed: () {
+                              // Placeholder for filters UI.
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Filters coming soon')),
+                              );
+                            },
+                            icon: Icon(Icons.tune_rounded, color: Theme.of(context).colorScheme.primary),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+
+                  // Category chips
+                  SizedBox(
+                    height: 54,
+                    child: ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _categories.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      itemBuilder: (context, i) {
+                        final selected = i == _selectedCategoryIndex;
+                        final label = _categories[i];
+                        final bg = selected ? Theme.of(context).colorScheme.primary : EoColors.surfaceContainerLowest;
+                        final fg = selected ? Theme.of(context).colorScheme.onPrimary : EoColors.onSurfaceVariant;
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedCategoryIndex = i),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 180),
+                            curve: Curves.easeOutCubic,
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                            decoration: BoxDecoration(
+                              color: bg,
+                              borderRadius: BorderRadius.circular(999),
+                              boxShadow: selected
+                                  ? [
+                                      BoxShadow(
+                                        blurRadius: 18,
+                                        offset: const Offset(0, 10),
+                                        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.18),
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                            child: Center(
+                              child: Text(
+                                label,
+                                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                      fontWeight: FontWeight.w900,
+                                      color: fg,
+                                    ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  const SizedBox(height: 10),
                   Expanded(
                     child: filtered.isEmpty
                         ? Center(
@@ -184,7 +279,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                             ),
                           )
                         : ListView.separated(
-                            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                            padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
                             itemCount: filtered.length,
                             separatorBuilder: (context, index) => const SizedBox(height: 12),
                             itemBuilder: (context, i) {
@@ -192,8 +287,14 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                               final isEnrolled = enrolledPathIds.contains(p.id);
                               final enrolling = _enrollingPathIds.contains(p.id);
 
-                              return CourseCard(
+                              // Without a progress model in Firestore, show a mock progress for enrolled.
+                              final progress = isEnrolled ? 0.65 : null;
+
+                              return RichCourseCard(
                                 course: p,
+                                progress01: progress,
+                                isNew: !isEnrolled && i == 2,
+                                primaryActionLabel: isEnrolled ? 'Continue' : (enrolling ? 'Enrolling...' : 'Enroll'),
                                 onTap: () {
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
@@ -201,29 +302,19 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                                     ),
                                   );
                                 },
-                                trailing: isEnrolled
-                                    ? FilledButton(
-                                        onPressed: () {
+                                onPrimaryAction: enrolling
+                                    ? () {}
+                                    : () {
+                                        if (isEnrolled) {
                                           Navigator.of(context).push(
                                             MaterialPageRoute(
                                               builder: (_) => CourseDetailScreen(path: p),
                                             ),
                                           );
-                                        },
-                                        child: const Text('Continue'),
-                                      )
-                                    : FilledButton.tonal(
-                                        onPressed: enrolling
-                                            ? null
-                                            : () => _enroll(uid: user.uid, pathId: p.id),
-                                        child: enrolling
-                                            ? const SizedBox(
-                                                height: 18,
-                                                width: 18,
-                                                child: CircularProgressIndicator(strokeWidth: 2),
-                                              )
-                                            : const Text('Enroll'),
-                                      ),
+                                          return;
+                                        }
+                                        _enroll(uid: user.uid, pathId: p.id);
+                                      },
                               );
                             },
                           ),
