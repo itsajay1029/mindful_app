@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#443100",
+                    "surface-variant": "#dadde2",
+                    "on-error-container": "#570008",
+                    "surface-container-highest": "#dadde2",
+                    "primary-container": "#baf9d4",
+                    "primary-fixed-dim": "#acebc7",
+                    "error-container": "#fb5151",
+                    "on-surface": "#2c2f32",
+                    "on-surface-variant": "#595c5f",
+                    "tertiary-dim": "#764400",
+                    "surface": "#f5f6fa",
+                    "secondary-container": "#fccb52",
+                    "on-secondary-container": "#5b4400",
+                    "secondary-dim": "#654c00",
+                    "secondary-fixed": "#fccb52",
+                    "inverse-primary": "#bfffda",
+                    "on-error": "#ffefee",
+                    "secondary-fixed-dim": "#edbd46",
+                    "primary": "#2b664a",
+                    "outline": "#75777a",
+                    "error": "#b31b25",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#9b9da1",
+                    "surface-container": "#e6e8ed",
+                    "surface-container-high": "#e0e2e8",
+                    "surface-dim": "#d1d5da",
+                    "surface-tint": "#2b664a",
+                    "surface-bright": "#f5f6fa",
+                    "tertiary-container": "#ff9800",
+                    "on-primary-container": "#256145",
+                    "on-tertiary-container": "#4a2800",
+                    "on-tertiary-fixed": "#271300",
+                    "on-tertiary-fixed-variant": "#563000",
+                    "primary-dim": "#1d5a3f",
+                    "on-primary": "#c9ffde",
+                    "inverse-surface": "#0c0e11",
+                    "primary-fixed": "#baf9d4",
+                    "on-secondary": "#fff1da",
+                    "on-primary-fixed-variant": "#306c4f",
+                    "tertiary": "#874e00",
+                    "on-background": "#2c2f32",
+                    "error-dim": "#9f0519",
+                    "outline-variant": "#abadb1",
+                    "tertiary-fixed": "#ff9800",
+                    "secondary": "#745700",
+                    "background": "#f5f6fa",
+                    "on-secondary-fixed-variant": "#674d00",
+                    "surface-container-low": "#eff1f5",
+                    "on-primary-fixed": "#0d4e34",
+                    "tertiary-fixed-dim": "#ec8c00",
+                    "on-tertiary": "#fff0e5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .squishy-physics:active {
+            transform: scale(0.92) translateY(2px);
+        }
+        .glass-player {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-[0_8px_32px_rgba(43,102,74,0.1)] flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<button class="hover:scale-110 transition-transform active:scale-95 transition-all duration-200 ease-out text-emerald-800 dark:text-emerald-400">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="text-emerald-900 dark:text-emerald-100 font-['Plus_Jakarta_Sans'] font-extrabold italic tracking-tight text-lg">AboveTheGrind</h1>
+</div>
+<div class="flex items-center gap-2">
+<div class="bg-tertiary-container/20 text-tertiary font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1 border border-tertiary-container/30">
+<span class="material-symbols-outlined text-sm" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                42 XP
+            </div>
+</div>
+</header>
+<main class="max-w-4xl mx-auto px-4 mt-6">
+<!-- Media Player Canvas -->
+<section class="relative aspect-video w-full rounded-lg overflow-hidden bg-surface-container-highest shadow-2xl group mb-8">
+<img class="w-full h-full object-cover" data-alt="Peaceful morning yoga session in a high-end minimalist studio with soft sunlight streaming through large windows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDXjoX1oOzVNKh6jtAKmeG46NdT38-W_dq_9w0VqjowtgIz8e_5buMbbNgOGtt6gS4sEnbJPmUBdGjjvIVPNprchtKfKeIU6uKb4FAZea8HjvNU-UU9OP27Yyy-IQ4sJ4HLeHzMozrrQFBxtbh-CC-C-03654PbR317miUQyScMzN33xOFLOj3d6ShT9zd3KQmIzmpe6rQdm93McSRsohnVuY2VqMpbWJOrcQ1bqWXm1hkhh222Hcqmi3wIQtpGxJxb_nfWMI1ynCGq"/>
+<!-- Video Overlay Controls -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-100 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-6">
+<!-- Progress Bar -->
+<div class="w-full mb-4">
+<div class="relative w-full h-2 bg-white/30 rounded-full cursor-pointer">
+<div class="absolute top-0 left-0 h-full w-2/3 bg-primary rounded-full flex justify-end items-center">
+<div class="w-4 h-4 bg-white rounded-full shadow-lg translate-x-2"></div>
+</div>
+</div>
+<div class="flex justify-between mt-2 text-[10px] text-white font-bold tracking-wider">
+<span>12:40</span>
+<span>18:00</span>
+</div>
+</div>
+<!-- Control Buttons -->
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-6 text-white">
+<button class="squishy-physics"><span class="material-symbols-outlined text-3xl" data-icon="replay_10">replay_10</span></button>
+<button class="w-14 h-14 bg-white text-primary rounded-full flex items-center justify-center squishy-physics shadow-xl">
+<span class="material-symbols-outlined text-4xl" data-icon="pause" style="font-variation-settings: 'FILL' 1;">pause</span>
+</button>
+<button class="squishy-physics"><span class="material-symbols-outlined text-3xl" data-icon="forward_10">forward_10</span></button>
+</div>
+<div class="flex items-center gap-4 text-white">
+<button class="squishy-physics"><span class="material-symbols-outlined" data-icon="closed_caption">closed_caption</span></button>
+<button class="squishy-physics"><span class="material-symbols-outlined" data-icon="settings">settings</span></button>
+<button class="squishy-physics"><span class="material-symbols-outlined" data-icon="fullscreen">fullscreen</span></button>
+</div>
+</div>
+</div>
+</section>
+<!-- Content Details -->
+<div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+<div class="md:col-span-8">
+<div class="flex items-center gap-3 mb-4">
+<span class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Module 04</span>
+<h2 class="text-on-surface-variant font-medium text-sm">Mental Reset Protocol</h2>
+</div>
+<h3 class="text-3xl font-extrabold text-on-surface mb-4 leading-tight">Mastering Breath: The 4-7-8 Neutralizer</h3>
+<p class="text-on-surface-variant leading-relaxed text-lg mb-8">
+                    Learn the physiological anchor for high-performance recovery. This session covers the exact technique used by elite performers to shift from a sympathetic 'fight or flight' state into deep parasympathetic recovery in under two minutes.
+                </p>
+<!-- Reflection Field -->
+<div class="bg-surface-container-low rounded-lg p-6 mb-8 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border-2 border-transparent focus-within:border-primary transition-all">
+<div class="flex items-center gap-2 mb-4 text-primary">
+<span class="material-symbols-outlined" data-icon="edit_note">edit_note</span>
+<label class="font-bold tracking-tight">Your Reflection</label>
+</div>
+<textarea class="w-full bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline-variant resize-none min-h-[120px]" placeholder="How did your focus shift after this exercise?"></textarea>
+</div>
+</div>
+<!-- Side Bento Info -->
+<div class="md:col-span-4 space-y-4">
+<div class="bg-secondary-container rounded-lg p-6 relative overflow-hidden group shadow-lg">
+<span class="material-symbols-outlined absolute -right-4 -top-4 text-8xl text-secondary-dim/10 rotate-12 transition-transform group-hover:rotate-45" data-icon="trophy">trophy</span>
+<h4 class="text-on-secondary-container font-extrabold text-xl mb-1">Earn +50 XP</h4>
+<p class="text-on-secondary-container/80 text-sm font-medium">Complete this module to reach Level 12</p>
+</div>
+<div class="bg-white rounded-lg p-6 shadow-md border border-outline-variant/10">
+<h4 class="font-bold text-on-surface mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="list_alt">list_alt</span>
+                        Next Up
+                    </h4>
+<div class="space-y-4">
+<div class="flex gap-3 items-center opacity-60">
+<div class="w-10 h-10 rounded-full bg-surface-container flex items-center justify-center flex-shrink-0">
+<span class="material-symbols-outlined text-sm" data-icon="play_arrow">play_arrow</span>
+</div>
+<div>
+<p class="text-xs font-bold">Cold Exposure 101</p>
+<p class="text-[10px] text-outline">08:15 MIN</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Action Bar -->
+<div class="fixed bottom-0 left-0 w-full bg-white/90 backdrop-blur-2xl px-6 pb-8 pt-4 flex flex-col items-center gap-4 shadow-[0_-8px_40px_rgba(0,0,0,0.08)] z-40">
+<button class="w-full max-w-lg bg-primary text-on-primary py-5 rounded-xl font-extrabold text-lg flex items-center justify-center gap-3 squishy-physics shadow-[0_12px_24px_rgba(43,102,74,0.3)] border-b-4 border-primary-dim">
+            Mark Complete
+            <span class="material-symbols-outlined" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</button>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-t-[3rem] z-50 shadow-[0_-8px_40px_rgba(0,0,0,0.08)]">
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 active:translate-y-1">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 active:translate-y-1">
+<span class="material-symbols-outlined" data-icon="category">category</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider">Segments</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 rounded-[2rem] px-5 py-2 scale-105 transition-all duration-300 active:translate-y-1">
+<span class="material-symbols-outlined" data-icon="waves" style="font-variation-settings: 'FILL' 1;">waves</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider">Reset</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 active:translate-y-1">
+<span class="material-symbols-outlined" data-icon="trophy">trophy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider">Board</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 active:translate-y-1">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider">Coach</span>
+</div>
+</nav>
+</body></html>

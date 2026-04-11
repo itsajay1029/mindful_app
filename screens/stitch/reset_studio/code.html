@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#443100",
+                    "surface-variant": "#dadde2",
+                    "on-error-container": "#570008",
+                    "surface-container-highest": "#dadde2",
+                    "primary-container": "#baf9d4",
+                    "primary-fixed-dim": "#acebc7",
+                    "error-container": "#fb5151",
+                    "on-surface": "#2c2f32",
+                    "on-surface-variant": "#595c5f",
+                    "tertiary-dim": "#764400",
+                    "surface": "#f5f6fa",
+                    "secondary-container": "#fccb52",
+                    "on-secondary-container": "#5b4400",
+                    "secondary-dim": "#654c00",
+                    "secondary-fixed": "#fccb52",
+                    "inverse-primary": "#bfffda",
+                    "on-error": "#ffefee",
+                    "secondary-fixed-dim": "#edbd46",
+                    "primary": "#2b664a",
+                    "outline": "#75777a",
+                    "error": "#b31b25",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#9b9da1",
+                    "surface-container": "#e6e8ed",
+                    "surface-container-high": "#e0e2e8",
+                    "surface-dim": "#d1d5da",
+                    "surface-tint": "#2b664a",
+                    "surface-bright": "#f5f6fa",
+                    "tertiary-container": "#ff9800",
+                    "on-primary-container": "#256145",
+                    "on-tertiary-container": "#4a2800",
+                    "on-tertiary-fixed": "#271300",
+                    "on-tertiary-fixed-variant": "#563000",
+                    "primary-dim": "#1d5a3f",
+                    "on-primary": "#c9ffde",
+                    "inverse-surface": "#0c0e11",
+                    "primary-fixed": "#baf9d4",
+                    "on-secondary": "#fff1da",
+                    "on-primary-fixed-variant": "#306c4f",
+                    "tertiary": "#874e00",
+                    "on-background": "#2c2f32",
+                    "error-dim": "#9f0519",
+                    "outline-variant": "#abadb1",
+                    "tertiary-fixed": "#ff9800",
+                    "secondary": "#745700",
+                    "background": "#f5f6fa",
+                    "on-secondary-fixed-variant": "#674d00",
+                    "surface-container-low": "#eff1f5",
+                    "on-primary-fixed": "#0d4e34",
+                    "tertiary-fixed-dim": "#ec8c00",
+                    "on-tertiary": "#fff0e5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .squishy-physics:active {
+            transform: scale(0.96);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-on-surface antialiased min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-[0_8px_32px_rgba(43,102,74,0.1)]">
+<div class="flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<button class="hover:scale-110 transition-transform active:scale-95 transition-all duration-200 ease-out text-emerald-800 dark:text-emerald-400">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Plus_Jakarta_Sans'] font-extrabold tracking-tight text-lg text-emerald-900 dark:text-emerald-100">Reset Studio</h1>
+</div>
+<div class="flex items-center gap-2">
+<div class="bg-tertiary-container/20 text-on-tertiary-fixed font-bold px-3 py-1 rounded-full text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-sm" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                    48 XP
+                </div>
+</div>
+</div>
+</header>
+<main class="px-6 pt-8 max-w-2xl mx-auto space-y-8">
+<!-- Hero Section - Tactical Playground Style -->
+<section class="relative overflow-hidden bg-primary-container rounded-lg p-8 shadow-[0_32px_48px_rgba(43,102,74,0.1)]">
+<div class="relative z-10 space-y-2">
+<span class="bg-primary text-on-primary text-[10px] uppercase font-bold tracking-widest px-3 py-1 rounded-full inline-block">Daily Ritual</span>
+<h2 class="text-3xl font-extrabold text-on-primary-fixed leading-tight">Quiet the noise,<br/>reclaim your flow.</h2>
+<p class="text-on-primary-fixed-variant max-w-[200px] text-sm font-medium">Bite-sized mental resets designed for high-performers.</p>
+</div>
+<div class="absolute -right-4 -bottom-4 w-48 h-48 opacity-20 transform rotate-12">
+<span class="material-symbols-outlined text-[160px]" data-icon="waves">waves</span>
+</div>
+</section>
+<!-- Sessions List -->
+<section class="space-y-6">
+<div class="flex items-center justify-between">
+<h3 class="text-xl font-bold tracking-tight">Quick Resets</h3>
+<span class="text-primary font-bold text-sm">See all</span>
+</div>
+<div class="space-y-4">
+<!-- Card 1 -->
+<div class="group bg-surface-container-lowest rounded-lg p-5 flex items-center gap-4 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(43,102,74,0.1)] transition-all duration-300 squishy-physics cursor-pointer relative overflow-hidden">
+<div class="w-14 h-14 bg-primary-container/30 rounded-lg flex items-center justify-center text-primary relative">
+<span class="material-symbols-outlined text-3xl" data-icon="timer_3">timer_3</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-on-surface text-lg">Instant Clarity</h4>
+<div class="flex items-center gap-2 text-on-surface-variant text-sm font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+                            3 mins • Guided Breathing
+                        </div>
+</div>
+<div class="flex items-center gap-3">
+<div class="bg-primary text-on-primary p-2 rounded-full shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group bg-surface-container-lowest rounded-lg p-5 flex items-center gap-4 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(43,102,74,0.1)] transition-all duration-300 squishy-physics cursor-pointer">
+<div class="w-14 h-14 bg-secondary-container/30 rounded-lg flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-3xl" data-icon="eye_tracking">eye_tracking</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-on-surface text-lg">Focus Realignment</h4>
+<div class="flex items-center gap-2 text-on-surface-variant text-sm font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+                            5 mins • Visual Scanning
+                        </div>
+</div>
+<div class="flex items-center gap-3">
+<div class="bg-primary text-on-primary p-2 rounded-full shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group bg-surface-container-lowest rounded-lg p-5 flex items-center gap-4 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(43,102,74,0.1)] transition-all duration-300 squishy-physics cursor-pointer">
+<div class="w-14 h-14 bg-tertiary-container/20 rounded-lg flex items-center justify-center text-tertiary">
+<span class="material-symbols-outlined text-3xl" data-icon="self_improvement">self_improvement</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-on-surface text-lg">The 60-Second Stop</h4>
+<div class="flex items-center gap-2 text-on-surface-variant text-sm font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+                            1 min • Micro-Meditation
+                        </div>
+</div>
+<div class="flex items-center gap-3">
+<div class="bg-primary text-on-primary p-2 rounded-full shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="group bg-surface-container-lowest rounded-lg p-5 flex items-center gap-4 shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:shadow-[0_12px_40px_rgba(43,102,74,0.1)] transition-all duration-300 squishy-physics cursor-pointer">
+<div class="w-14 h-14 bg-slate-200/50 rounded-lg flex items-center justify-center text-slate-600">
+<span class="material-symbols-outlined text-3xl" data-icon="air">air</span>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-on-surface text-lg">Brain Flush</h4>
+<div class="flex items-center gap-2 text-on-surface-variant text-sm font-medium">
+<span class="material-symbols-outlined text-sm" data-icon="schedule">schedule</span>
+                            8 mins • White Noise Mix
+                        </div>
+</div>
+<div class="flex items-center gap-3">
+<div class="bg-primary text-on-primary p-2 rounded-full shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-2xl" data-icon="play_arrow" style="font-variation-settings: 'FILL' 1;">play_arrow</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Specialized Bento Section -->
+<section class="grid grid-cols-2 gap-4">
+<div class="col-span-1 bg-secondary-container/20 rounded-lg p-6 flex flex-col justify-between aspect-square relative overflow-hidden group">
+<div class="absolute -top-4 -right-4 bg-secondary-container w-24 h-24 rounded-full opacity-30 group-hover:scale-150 transition-transform duration-500"></div>
+<span class="material-symbols-outlined text-secondary text-4xl" data-icon="psychology">psychology</span>
+<div>
+<h5 class="font-bold text-on-secondary-container">Mind Scan</h5>
+<p class="text-xs text-on-secondary-fixed opacity-70">Deep emotional check-in</p>
+</div>
+</div>
+<div class="col-span-1 bg-tertiary-container/10 rounded-lg p-6 flex flex-col justify-between aspect-square relative overflow-hidden group">
+<div class="absolute -bottom-4 -left-4 bg-tertiary-container w-20 h-20 rounded-full opacity-20 group-hover:scale-150 transition-transform duration-500"></div>
+<span class="material-symbols-outlined text-tertiary text-4xl" data-icon="auto_awesome">auto_awesome</span>
+<div>
+<h5 class="font-bold text-on-tertiary-container">Energy Spike</h5>
+<p class="text-xs text-on-tertiary-fixed opacity-70">Quick CNS activation</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-t-[3rem] z-50 shadow-[0_-8px_40px_rgba(0,0,0,0.08)]">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="category">category</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Segments</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 rounded-[2rem] px-5 py-2 scale-105 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="waves" style="font-variation-settings: 'FILL' 1;">waves</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Reset</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="trophy">trophy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Board</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Coach</span>
+</a>
+</nav>
+</body></html>

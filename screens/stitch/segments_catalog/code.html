@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#443100",
+                    "surface-variant": "#dadde2",
+                    "on-error-container": "#570008",
+                    "surface-container-highest": "#dadde2",
+                    "primary-container": "#baf9d4",
+                    "primary-fixed-dim": "#acebc7",
+                    "error-container": "#fb5151",
+                    "on-surface": "#2c2f32",
+                    "on-surface-variant": "#595c5f",
+                    "tertiary-dim": "#764400",
+                    "surface": "#f5f6fa",
+                    "secondary-container": "#fccb52",
+                    "on-secondary-container": "#5b4400",
+                    "secondary-dim": "#654c00",
+                    "secondary-fixed": "#fccb52",
+                    "inverse-primary": "#bfffda",
+                    "on-error": "#ffefee",
+                    "secondary-fixed-dim": "#edbd46",
+                    "primary": "#2b664a",
+                    "outline": "#75777a",
+                    "error": "#b31b25",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#9b9da1",
+                    "surface-container": "#e6e8ed",
+                    "surface-container-high": "#e0e2e8",
+                    "surface-dim": "#d1d5da",
+                    "surface-tint": "#2b664a",
+                    "surface-bright": "#f5f6fa",
+                    "tertiary-container": "#ff9800",
+                    "on-primary-container": "#256145",
+                    "on-tertiary-container": "#4a2800",
+                    "on-tertiary-fixed": "#271300",
+                    "on-tertiary-fixed-variant": "#563000",
+                    "primary-dim": "#1d5a3f",
+                    "on-primary": "#c9ffde",
+                    "inverse-surface": "#0c0e11",
+                    "primary-fixed": "#baf9d4",
+                    "on-secondary": "#fff1da",
+                    "on-primary-fixed-variant": "#306c4f",
+                    "tertiary": "#874e00",
+                    "on-background": "#2c2f32",
+                    "error-dim": "#9f0519",
+                    "outline-variant": "#abadb1",
+                    "tertiary-fixed": "#ff9800",
+                    "secondary": "#745700",
+                    "background": "#f5f6fa",
+                    "on-secondary-fixed-variant": "#674d00",
+                    "surface-container-low": "#eff1f5",
+                    "on-primary-fixed": "#0d4e34",
+                    "tertiary-fixed-dim": "#ec8c00",
+                    "on-tertiary": "#fff0e5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .squishy-physics { transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .tactile-button {
+            box-shadow: 0 4px 0 0 #306c4f;
+        }
+        .tactile-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 0 #306c4f;
+        }
+        .glass-card {
+            backdrop-filter: blur(24px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-50 shadow-[0_8px_32px_rgba(43,102,74,0.1)] flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<button class="hover:scale-110 transition-transform active:scale-95 transition-all duration-200 ease-out text-emerald-800 dark:text-emerald-400">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-['Plus_Jakarta_Sans'] font-extrabold tracking-tight text-lg text-emerald-900 dark:text-emerald-100">Segments</h1>
+</div>
+<div class="w-10 h-10 rounded-full bg-primary-container flex items-center justify-center overflow-hidden">
+<img alt="User Avatar" class="w-full h-full object-cover" data-alt="minimalist cartoon avatar of a person with friendly expression in a soft green circle background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC1r6vvW5hkWkLAUeF0fD8wDry9l03hRgw4eD9hYDbYj0kyOZycVGGtbf4JIM4MkE2f8Ds76jinXg6CEY3vy1O4OhAsuSh54zGVUOxu1B0v7NvSTFAcPz08hixgxct52j_Fn1FqbQO19ATSYtJEsST4e1qUZeS7_j-jlpTuP_vGrGXqsGgHuufwQOPNmbLXGLCW0AAJBLRGZYq4SBMEfwevTS8y3J_P-xt7quadvC0kNGg-ckHNKP1vb252NAZWTdtT7e0YyAszelmt"/>
+</div>
+</header>
+<main class="px-6 py-8 max-w-2xl mx-auto">
+<div class="mb-10">
+<h2 class="text-3xl font-extrabold text-on-surface tracking-tight mb-2">The Skills Catalog</h2>
+<p class="text-on-surface-variant text-lg">Choose a path to master your grind and unlock your potential.</p>
+</div>
+<div class="grid grid-cols-1 gap-6">
+<div class="group relative bg-surface-container-lowest rounded-lg p-6 squishy-physics cursor-pointer hover:scale-[1.02] active:scale-[0.98] shadow-[0_32px_48px_rgba(43,102,74,0.05)] border-l-8 border-primary">
+<div class="flex items-start gap-6">
+<div class="w-16 h-16 rounded-xl bg-primary-container flex items-center justify-center text-primary group-hover:rotate-6 transition-transform">
+<span class="material-symbols-outlined !text-4xl" style="font-variation-settings: 'FILL' 1;">groups</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center mb-1">
+<h3 class="text-xl font-bold text-on-surface">Leadership</h3>
+<span class="bg-primary-container text-on-primary-fixed-variant text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">Pro Path</span>
+</div>
+<p class="text-on-surface-variant leading-relaxed">Master the art of influence, communication, and team synergy.</p>
+<div class="mt-4 h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 65%;"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative bg-surface-container-lowest rounded-lg p-6 squishy-physics cursor-pointer hover:scale-[1.02] active:scale-[0.98] shadow-[0_32px_48px_rgba(116,87,0,0.05)] border-l-8 border-secondary">
+<div class="flex items-start gap-6">
+<div class="w-16 h-16 rounded-xl bg-secondary-container flex items-center justify-center text-on-secondary-container group-hover:rotate-6 transition-transform">
+<span class="material-symbols-outlined !text-4xl" style="font-variation-settings: 'FILL' 1;">target</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center mb-1">
+<h3 class="text-xl font-bold text-on-surface">Deep Focus</h3>
+<span class="bg-secondary-container text-on-secondary-fixed text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">Unlocked</span>
+</div>
+<p class="text-on-surface-variant leading-relaxed">Build unshakeable concentration and productivity workflows.</p>
+<div class="mt-4 flex gap-1">
+<div class="h-1.5 w-full bg-secondary rounded-full"></div>
+<div class="h-1.5 w-full bg-secondary rounded-full"></div>
+<div class="h-1.5 w-full bg-surface-container rounded-full"></div>
+<div class="h-1.5 w-full bg-surface-container rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="group relative bg-surface-container-lowest rounded-lg p-6 squishy-physics cursor-pointer hover:scale-[1.02] active:scale-[0.98] shadow-[0_32px_48px_rgba(135,78,0,0.05)] border-l-8 border-tertiary">
+<div class="flex items-start gap-6">
+<div class="w-16 h-16 rounded-xl bg-tertiary-container flex items-center justify-center text-white group-hover:rotate-6 transition-transform">
+<span class="material-symbols-outlined !text-4xl" style="font-variation-settings: 'FILL' 1;">self_care</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center mb-1">
+<h3 class="text-xl font-bold text-on-surface">Wellness</h3>
+<span class="bg-tertiary-container text-on-tertiary-fixed text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">Mindfulness</span>
+</div>
+<p class="text-on-surface-variant leading-relaxed">Habits for physical health, mental clarity, and sustainable energy.</p>
+<p class="mt-4 text-xs font-bold text-tertiary uppercase tracking-widest">Next Lesson: Morning Flow</p>
+</div>
+</div>
+</div>
+<div class="group relative bg-surface-container-lowest rounded-lg p-6 squishy-physics cursor-pointer hover:scale-[1.02] active:scale-[0.98] shadow-[0_32px_48px_rgba(43,102,74,0.05)] border-l-8 border-slate-300 opacity-75">
+<div class="flex items-start gap-6">
+<div class="w-16 h-16 rounded-xl bg-surface-container-high flex items-center justify-center text-outline group-hover:rotate-6 transition-transform">
+<span class="material-symbols-outlined !text-4xl">psychology</span>
+</div>
+<div class="flex-1">
+<div class="flex justify-between items-center mb-1">
+<h3 class="text-xl font-bold text-on-surface">Cognitive Bias</h3>
+<span class="material-symbols-outlined text-outline">lock</span>
+</div>
+<p class="text-on-surface-variant leading-relaxed">Understanding mental shortcuts to make better decisions.</p>
+<p class="mt-4 text-xs font-semibold text-outline">Reach Level 5 to Unlock</p>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-12 bg-primary p-8 rounded-xl relative overflow-hidden text-on-primary shadow-xl">
+<div class="relative z-10">
+<h4 class="text-2xl font-extrabold mb-2">The Mastery Path</h4>
+<p class="mb-6 opacity-90 max-w-[70%]">Earn 500 more XP in Segments to unlock the Masterclass series.</p>
+<button class="bg-primary-container text-on-primary-container px-8 py-3 rounded-xl font-bold tactile-button squishy-physics">
+                    View Progress
+                </button>
+</div>
+<div class="absolute -right-10 -bottom-10 opacity-20 transform rotate-12">
+<span class="material-symbols-outlined !text-[12rem]">trophy</span>
+</div>
+</div>
+</main>
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-t-[3rem] z-50 shadow-[0_-8px_40px_rgba(0,0,0,0.08)]">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 rounded-[2rem] px-5 py-2 scale-105 active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">category</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Segments</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined">waves</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Reset</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined">trophy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Board</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Coach</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Riddle Quest - Brain Break</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#2b664a",
+                    "on-tertiary-fixed-variant": "#563000",
+                    "secondary-container": "#fccb52",
+                    "on-surface": "#2c2f32",
+                    "tertiary": "#874e00",
+                    "on-error": "#ffefee",
+                    "primary-fixed": "#baf9d4",
+                    "surface": "#f5f6fa",
+                    "secondary": "#745700",
+                    "surface-variant": "#dadde2",
+                    "on-primary-fixed-variant": "#306c4f",
+                    "surface-tint": "#2b664a",
+                    "on-background": "#2c2f32",
+                    "on-error-container": "#570008",
+                    "outline": "#75777a",
+                    "on-primary": "#c9ffde",
+                    "tertiary-fixed": "#ff9800",
+                    "on-primary-container": "#256145",
+                    "on-secondary-fixed": "#443100",
+                    "surface-container": "#e6e8ed",
+                    "primary-container": "#baf9d4",
+                    "outline-variant": "#abadb1",
+                    "surface-container-low": "#eff1f5",
+                    "inverse-surface": "#0c0e11",
+                    "surface-dim": "#d1d5da",
+                    "on-tertiary-container": "#4a2800",
+                    "on-surface-variant": "#595c5f",
+                    "tertiary-fixed-dim": "#ec8c00",
+                    "secondary-fixed-dim": "#edbd46",
+                    "error-container": "#fb5151",
+                    "secondary-fixed": "#fccb52",
+                    "background": "#f5f6fa",
+                    "on-secondary-fixed-variant": "#674d00",
+                    "surface-container-high": "#e0e2e8",
+                    "surface-bright": "#f5f6fa",
+                    "tertiary-container": "#ff9800",
+                    "error": "#b31b25",
+                    "secondary-dim": "#654c00",
+                    "on-tertiary-fixed": "#271300",
+                    "surface-container-lowest": "#ffffff",
+                    "primary-fixed-dim": "#acebc7",
+                    "on-tertiary": "#fff0e5",
+                    "inverse-on-surface": "#9b9da1",
+                    "on-secondary-container": "#5b4400",
+                    "inverse-primary": "#bfffda",
+                    "on-secondary": "#fff1da",
+                    "error-dim": "#9f0519",
+                    "tertiary-dim": "#764400",
+                    "on-primary-fixed": "#0d4e34",
+                    "surface-container-highest": "#dadde2",
+                    "primary-dim": "#1d5a3f"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .glass-header { backdrop-filter: blur(24px); }
+        .squishy-button:active { transform: translateY(4px); }
+        .float-animation { animation: floating 3s ease-in-out infinite; }
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 flex items-center justify-between px-6 h-16 w-full bg-emerald-50/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-[0_4px_20px_-4px_rgba(43,102,74,0.1)]">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden bg-primary-container flex items-center justify-center">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A small circular avatar sticker of a friendly cartoon user profile with vibrant green and white accents." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYxXW2VhJunRTA3M5aMVwJhFWJKE8qV5dtW04TIvyJ7eDyy57J8tvJWaBpTXtKd1Q0-hFJGQGB86ljDZDrG-B-MUfmjnC8CoMeodrGATJ2-CY31nQWQErBFh09hn8MKImIx60SvqNfGsuxlPlkT8udJcUoR0zVF-Vc8yFzFVAQ8AFbGEU8po-47mWeH1DHwqM6zYCjI3iW8NhN-RYwywWQKu5CNOms9qEWrqjMj3LagqWYdwOTaAKXbuyVDJCOWkao5ZZGn0LUeV7Q"/>
+</div>
+<h1 class="text-xl font-extrabold text-emerald-800 dark:text-emerald-200 font-['Plus_Jakarta_Sans'] tracking-tight">Brain Break</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-1 bg-tertiary-container/20 px-3 py-1.5 rounded-full relative">
+<span class="material-symbols-outlined text-tertiary-fixed text-lg" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="text-on-tertiary-container font-extrabold text-sm">12</span>
+</div><span class="absolute -bottom-4 right-0 text-emerald-600 font-black text-sm animate-bounce">+1</span>
+<span class="material-symbols-outlined text-emerald-700 dark:text-emerald-400 hover:scale-105 transition-transform" data-icon="bolt">bolt</span>
+</div>
+</header>
+<main class="flex-1 w-full max-w-md mx-auto pt-24 pb-32 px-6">
+<!-- Mascot Section -->
+<div class="flex flex-col items-center mb-8">
+<div class="relative w-48 h-48 mb-4 float-animation">
+<img alt="Owl Mascot" class="w-full h-full object-contain" data-alt="A friendly, stylized green and gold owl mascot wearing oversized scholars glasses, appearing squishy and three-dimensional." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkQx7A0ifIaR9x2jOCJlhCZ7Ua-vsnDG3jibdH0giWYnosI1WCLibSSmpmuKOMq-T4Ds3bt0rVKQa0zsARE6PEXsosevIjaEbcf19TPvx3cJZWdJ9hLlUTpruztmaoMmhPiOCpg2J_70qLyL-gfoyEPVUyQfurAgWGPyrffT9HTJTSA4_ng-2t4F1QzkBJ9blF3hlgNjTeDggblyPPuDI9tJSDgR0d4jRd_E6VNAJxPhIBZOp5-Jt8EL68yjzjyu0_t3uNDPvAZxzw"/>
+<div class="absolute -top-2 -right-2 bg-primary-container text-on-primary-container px-4 py-1 rounded-full text-xs font-black shadow-lg -rotate-12 border-2 border-white">
+                    QUEST ACTIVE!
+                </div>
+</div>
+<div class="text-center">
+<p class="text-on-surface-variant font-bold text-sm tracking-widest uppercase mb-1">Level 4: The Riddle Master</p>
+<h2 class="text-2xl font-extrabold text-primary leading-tight">Think fast, Brainiac!</h2>
+</div>
+</div>
+<!-- Riddle Card -->
+<div class="bg-surface-container-lowest rounded-xl p-8 mb-8 shadow-[0_20px_50px_rgba(43,102,74,0.1)] relative overflow-hidden">
+<div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-primary to-secondary-container"></div>
+<div class="mb-4">
+<span class="text-4xl">🤔</span>
+</div>
+<p class="text-xl font-extrabold text-on-surface leading-snug">
+                I have keys, but no locks. I have a space, but no room. You can allow me in, but you can never leave. What am I?
+            </p>
+<div class="mt-6 flex gap-2">
+<div class="h-1.5 w-1/3 bg-primary rounded-full"></div>
+<div class="h-1.5 w-1/3 bg-surface-container rounded-full"></div>
+<div class="h-1.5 w-1/3 bg-surface-container rounded-full"></div>
+</div>
+</div>
+<!-- Answer Buttons -->
+<div class="grid grid-cols-1 gap-4 mb-10">
+<!-- Option 1 -->
+<button class="group w-full bg-surface-container-low hover:bg-primary-container p-5 rounded-lg flex items-center gap-4 transition-all duration-200 squishy-button outline-none border-b-4 border-surface-variant hover:border-on-primary-fixed-variant">
+<div class="w-10 h-10 rounded-full bg-white flex items-center justify-center font-black text-primary text-lg group-hover:bg-primary group-hover:text-white transition-colors">A</div>
+<span class="text-lg font-bold text-on-surface group-hover:text-on-primary-container">A Prison</span>
+</button>
+<!-- Option 2 (Selected State Mockup) -->
+<button class="w-full bg-emerald-50 p-5 rounded-lg flex items-center gap-4 border-4 border-emerald-500 transition-all duration-200 shadow-[0_4px_0_0_#10b981]">
+<div class="w-10 h-10 rounded-full bg-primary flex items-center justify-center font-black text-white text-lg">B</div>
+<span class="text-lg font-extrabold text-on-primary-container">A Keyboard</span>
+<span class="material-symbols-outlined ml-auto text-emerald-600 scale-125" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</button>
+<!-- Option 3 -->
+<button class="group w-full bg-surface-container-low hover:bg-primary-container p-5 rounded-lg flex items-center gap-4 transition-all duration-200 squishy-button outline-none border-b-4 border-surface-variant hover:border-on-primary-fixed-variant">
+<div class="w-10 h-10 rounded-full bg-white flex items-center justify-center font-black text-primary text-lg group-hover:bg-primary group-hover:text-white transition-colors">C</div>
+<span class="text-lg font-bold text-on-surface group-hover:text-on-primary-container">A Map</span>
+</button>
+<!-- Option 4 -->
+<button class="group w-full bg-surface-container-low hover:bg-primary-container p-5 rounded-lg flex items-center gap-4 transition-all duration-200 squishy-button outline-none border-b-4 border-surface-variant hover:border-on-primary-fixed-variant">
+<div class="w-10 h-10 rounded-full bg-white flex items-center justify-center font-black text-primary text-lg group-hover:bg-primary group-hover:text-white transition-colors">D</div>
+<span class="text-lg font-bold text-on-surface group-hover:text-on-primary-container">An Atlas</span>
+</button>
+</div>
+<!-- Playful Check Button (Conditional Apperance) -->
+<div class="fixed bottom-24 left-0 w-full px-6 flex justify-center pointer-events-none">
+<button class="pointer-events-auto bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-lg px-12 py-5 rounded-xl shadow-[0_8px_0_0_#065f46] active:shadow-none active:translate-y-2 transition-all flex items-center gap-3">
+                CONTINUE
+                <span class="material-symbols-outlined font-black">arrow_forward</span>
+</button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pt-3 pb-8 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-t-[3rem] z-50 border-t-2 border-emerald-50 dark:border-slate-800 shadow-[0_-8px_40px_-10px_rgba(0,0,0,0.08)]">
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2.5 hover:bg-emerald-50 dark:hover:bg-slate-800/50 rounded-[2rem] transition-all">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold uppercase tracking-wider mt-1">Home</span>
+</div>
+<div class="flex flex-col items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-200 rounded-[2rem] px-5 py-2.5 mb-1 transition-all shadow-[inset_0_-4px_0_0_#2B664A20]">
+<span class="material-symbols-outlined" data-icon="extension" style="font-variation-settings: 'FILL' 1;">extension</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold uppercase tracking-wider mt-1">Quests</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2.5 hover:bg-emerald-50 dark:hover:bg-slate-800/50 rounded-[2rem] transition-all">
+<span class="material-symbols-outlined" data-icon="quiz">quiz</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold uppercase tracking-wider mt-1">Trivia</span>
+</div>
+<div class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-5 py-2.5 hover:bg-emerald-50 dark:hover:bg-slate-800/50 rounded-[2rem] transition-all">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-['Plus_Jakarta_Sans'] text-[11px] font-bold uppercase tracking-wider mt-1">Profile</span>
+</div>
+</nav>
+</body></html>

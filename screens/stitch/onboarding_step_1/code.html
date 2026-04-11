@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AboveTheGrind - Onboarding</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed": "#443100",
+                      "surface-variant": "#dadde2",
+                      "on-error-container": "#570008",
+                      "surface-container-highest": "#dadde2",
+                      "primary-container": "#baf9d4",
+                      "primary-fixed-dim": "#acebc7",
+                      "error-container": "#fb5151",
+                      "on-surface": "#2c2f32",
+                      "on-surface-variant": "#595c5f",
+                      "tertiary-dim": "#764400",
+                      "surface": "#f5f6fa",
+                      "secondary-container": "#fccb52",
+                      "on-secondary-container": "#5b4400",
+                      "secondary-dim": "#654c00",
+                      "secondary-fixed": "#fccb52",
+                      "inverse-primary": "#bfffda",
+                      "on-error": "#ffefee",
+                      "secondary-fixed-dim": "#edbd46",
+                      "primary": "#2b664a",
+                      "outline": "#75777a",
+                      "error": "#b31b25",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-on-surface": "#9b9da1",
+                      "surface-container": "#e6e8ed",
+                      "surface-container-high": "#e0e2e8",
+                      "surface-dim": "#d1d5da",
+                      "surface-tint": "#2b664a",
+                      "surface-bright": "#f5f6fa",
+                      "tertiary-container": "#ff9800",
+                      "on-primary-container": "#256145",
+                      "on-tertiary-container": "#4a2800",
+                      "on-tertiary-fixed": "#271300",
+                      "on-tertiary-fixed-variant": "#563000",
+                      "primary-dim": "#1d5a3f",
+                      "on-primary": "#c9ffde",
+                      "inverse-surface": "#0c0e11",
+                      "primary-fixed": "#baf9d4",
+                      "on-secondary": "#fff1da",
+                      "on-primary-fixed-variant": "#306c4f",
+                      "tertiary": "#874e00",
+                      "on-background": "#2c2f32",
+                      "error-dim": "#9f0519",
+                      "outline-variant": "#abadb1",
+                      "tertiary-fixed": "#ff9800",
+                      "secondary": "#745700",
+                      "background": "#f5f6fa",
+                      "on-secondary-fixed-variant": "#674d00",
+                      "surface-container-low": "#eff1f5",
+                      "on-primary-fixed": "#0d4e34",
+                      "tertiary-fixed-dim": "#ec8c00",
+                      "on-tertiary": "#fff0e5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Plus Jakarta Sans"],
+                      "body": ["Plus Jakarta Sans"],
+                      "label": ["Plus Jakarta Sans"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .squishy-physics:active {
+            transform: scale(0.95);
+        }
+        .ghost-border {
+            outline: 2px solid rgba(171, 173, 177, 0.15);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex flex-col overflow-x-hidden">
+<!-- TopAppBar (Mapped from JSON) -->
+<header class="bg-white/80 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-[0_8px_32px_rgba(43,102,74,0.1)] flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<button class="hover:scale-110 transition-transform active:scale-95 transition-all duration-200 ease-out text-emerald-800">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<span class="font-['Plus_Jakarta_Sans'] font-extrabold tracking-tight text-lg text-emerald-800">AboveTheGrind</span>
+</div>
+<div class="flex flex-col items-end">
+<span class="font-label text-[10px] uppercase tracking-wider text-slate-400 font-bold">Step 1 of 3</span>
+<div class="flex gap-1 mt-1">
+<div class="h-1 w-6 rounded-full bg-primary"></div>
+<div class="h-1 w-6 rounded-full bg-surface-variant"></div>
+<div class="h-1 w-6 rounded-full bg-surface-variant"></div>
+</div>
+</div>
+</header>
+<main class="flex-grow flex flex-col items-center justify-center px-6 py-12 max-w-4xl mx-auto w-full">
+<!-- Hero Section -->
+<div class="relative w-full text-center mb-12">
+<div class="absolute -top-12 -left-4 w-24 h-24 bg-primary-container/30 rounded-full blur-3xl -z-10"></div>
+<div class="absolute -bottom-8 -right-4 w-32 h-32 bg-secondary-container/20 rounded-full blur-3xl -z-10"></div>
+<h1 class="text-4xl md:text-6xl font-headline font-extrabold text-on-surface leading-tight mb-4 tracking-tight">
+                Design your <br/>
+<span class="text-primary italic">performance</span> path.
+            </h1>
+<p class="text-on-surface-variant text-lg max-w-md mx-auto">
+                First, let's figure out how you'll be using AboveTheGrind to elevate your workflow.
+            </p>
+</div>
+<!-- Role Selection (The "Tactile Playground" Bento) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full mb-12">
+<!-- Individual Option -->
+<label class="group cursor-pointer relative">
+<input checked="" class="peer hidden" name="role" type="radio"/>
+<div class="bg-surface-container-lowest p-8 rounded-lg transition-all duration-300 peer-checked:bg-primary-container/50 peer-checked:shadow-[0_20px_50px_rgba(43,102,74,0.15)] peer-checked:scale-[1.02] ghost-border peer-checked:outline-primary/40 h-full flex flex-col items-start gap-6">
+<div class="w-16 h-16 rounded-xl bg-white shadow-sm flex items-center justify-center text-primary rotate-[-3deg] group-hover:rotate-[0deg] transition-transform">
+<span class="material-symbols-outlined text-4xl" data-icon="person_play">person_play</span>
+</div>
+<div>
+<h3 class="text-2xl font-headline font-bold text-on-surface mb-2">Individual</h3>
+<p class="text-on-surface-variant leading-relaxed">Focus on personal growth, streak tracking, and daily energy management.</p>
+</div>
+<div class="mt-auto flex items-center gap-2 text-primary font-bold">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-xs uppercase tracking-widest">Most Popular</span>
+</div>
+</div>
+</label>
+<!-- Manager Option -->
+<label class="group cursor-pointer relative">
+<input class="peer hidden" name="role" type="radio"/>
+<div class="bg-surface-container-lowest p-8 rounded-lg transition-all duration-300 peer-checked:bg-primary-container/50 peer-checked:shadow-[0_20px_50px_rgba(43,102,74,0.15)] peer-checked:scale-[1.02] ghost-border peer-checked:outline-primary/40 h-full flex flex-col items-start gap-6">
+<div class="w-16 h-16 rounded-xl bg-white shadow-sm flex items-center justify-center text-secondary rotate-[5deg] group-hover:rotate-[0deg] transition-transform">
+<span class="material-symbols-outlined text-4xl" data-icon="groups">groups</span>
+</div>
+<div>
+<h3 class="text-2xl font-headline font-bold text-on-surface mb-2">Manager</h3>
+<p class="text-on-surface-variant leading-relaxed">Drive team engagement, visualize group metrics, and coach with data.</p>
+</div>
+<div class="mt-auto text-on-surface-variant/40">
+<span class="text-xs uppercase tracking-widest font-bold">Workspace Ready</span>
+</div>
+</div>
+</label>
+</div>
+<!-- Decorative Asset -->
+<div class="w-full flex justify-center mb-16 overflow-hidden">
+<div class="relative w-full max-w-sm">
+<img class="w-full h-48 object-cover rounded-xl shadow-2xl opacity-80 mix-blend-multiply grayscale-[0.2]" data-alt="Modern abstract 3D visualization of floating green glass spheres and fluid geometric shapes with soft ambient lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVuiRs9ujNRqWhbBRFc2s6nnaRX2aIC8yXG3c6vvtjJZApT7Vz520_YJk-Y-eNXGxAjwM3En3fe_Uc6QKjJNM2muqJtfqqzJvCRtEcjpq2-xk0pwiNf-Pq7sDzCJ9s1CLK-mRwFp11DCRtcnkswq6a38W9YoeTWYrutZt6Jn-3r5fygb3cb1oxhM-szV63doFgpe-lFKJ0NdhTIZBGAjONNQCAYjYMQ1SL2sb3zAf0uGQQuOR9DVkj3drIB-xI3A2YCKLqeK_oIDT5"/>
+<div class="absolute top-4 right-4 bg-tertiary-container text-on-tertiary-container px-4 py-2 rounded-full font-bold text-xs shadow-lg rotate-12">
+                    STARTING FRESH
+                </div>
+</div>
+</div>
+<!-- Bottom Actions -->
+<div class="w-full max-w-md space-y-4">
+<button class="w-full bg-primary text-on-primary py-5 px-8 rounded-xl font-headline font-bold text-lg shadow-[0_12px_24px_rgba(43,102,74,0.25)] border-b-4 border-on-primary-fixed-variant transition-all hover:translate-y-[-2px] active:translate-y-[2px] active:border-b-0 squishy-physics">
+                Continue
+            </button>
+<button class="w-full text-on-surface-variant font-bold text-sm uppercase tracking-widest hover:text-primary transition-colors py-2">
+                Already have an account? Sign In
+            </button>
+</div>
+</main>
+<!-- Footer Decoration -->
+<div class="h-32 w-full pointer-events-none relative overflow-hidden">
+<svg class="absolute bottom-0 left-0 w-full h-full opacity-5" fill="none" viewbox="0 0 1440 320">
+<path d="M0,192L48,202.7C96,213,192,235,288,229.3C384,224,480,192,576,192C672,192,768,224,864,224C960,224,1056,192,1152,170.7C1248,149,1344,139,1392,133.3L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z" fill="#2B664A"></path>
+</svg>
+</div>
+</body></html>

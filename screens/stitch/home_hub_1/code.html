@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed": "#443100",
+                      "surface-variant": "#dadde2",
+                      "on-error-container": "#570008",
+                      "surface-container-highest": "#dadde2",
+                      "primary-container": "#baf9d4",
+                      "primary-fixed-dim": "#acebc7",
+                      "error-container": "#fb5151",
+                      "on-surface": "#2c2f32",
+                      "on-surface-variant": "#595c5f",
+                      "tertiary-dim": "#764400",
+                      "surface": "#f5f6fa",
+                      "secondary-container": "#fccb52",
+                      "on-secondary-container": "#5b4400",
+                      "secondary-dim": "#654c00",
+                      "secondary-fixed": "#fccb52",
+                      "inverse-primary": "#bfffda",
+                      "on-error": "#ffefee",
+                      "secondary-fixed-dim": "#edbd46",
+                      "primary": "#2b664a",
+                      "outline": "#75777a",
+                      "error": "#b31b25",
+                      "surface-container-lowest": "#ffffff",
+                      "inverse-on-surface": "#9b9da1",
+                      "surface-container": "#e6e8ed",
+                      "surface-container-high": "#e0e2e8",
+                      "surface-dim": "#d1d5da",
+                      "surface-tint": "#2b664a",
+                      "surface-bright": "#f5f6fa",
+                      "tertiary-container": "#ff9800",
+                      "on-primary-container": "#256145",
+                      "on-tertiary-container": "#4a2800",
+                      "on-tertiary-fixed": "#271300",
+                      "on-tertiary-fixed-variant": "#563000",
+                      "primary-dim": "#1d5a3f",
+                      "on-primary": "#c9ffde",
+                      "inverse-surface": "#0c0e11",
+                      "primary-fixed": "#baf9d4",
+                      "on-secondary": "#fff1da",
+                      "on-primary-fixed-variant": "#306c4f",
+                      "tertiary": "#874e00",
+                      "on-background": "#2c2f32",
+                      "error-dim": "#9f0519",
+                      "outline-variant": "#abadb1",
+                      "tertiary-fixed": "#ff9800",
+                      "secondary": "#745700",
+                      "background": "#f5f6fa",
+                      "on-secondary-fixed-variant": "#674d00",
+                      "surface-container-low": "#eff1f5",
+                      "on-primary-fixed": "#0d4e34",
+                      "tertiary-fixed-dim": "#ec8c00",
+                      "on-tertiary": "#fff0e5"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Plus Jakarta Sans"],
+                      "body": ["Plus Jakarta Sans"],
+                      "label": ["Plus Jakarta Sans"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .squishy-physics:active {
+            transform: scale(0.95) translateY(2px);
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-on-surface antialiased min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl sticky top-0 z-50 flex items-center justify-between px-6 py-4 w-full shadow-[0_8px_32px_rgba(43,102,74,0.1)]">
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-emerald-800 dark:text-emerald-400 hover:scale-110 transition-transform active:scale-95 transition-all duration-200 ease-out">arrow_back</button>
+<h1 class="font-['Plus_Jakarta_Sans'] font-extrabold tracking-tight text-lg text-emerald-900 dark:text-emerald-100 italic">AboveTheGrind</h1>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative w-10 h-10">
+<!-- Circular Progress Ring (XP) -->
+<svg class="absolute inset-0 w-full h-full -rotate-90">
+<circle class="text-primary-container" cx="20" cy="20" fill="transparent" r="18" stroke="currentColor" stroke-width="3"></circle>
+<circle class="text-primary" cx="20" cy="20" fill="transparent" r="18" stroke="currentColor" stroke-dasharray="113" stroke-dashoffset="30" stroke-linecap="round" stroke-width="3"></circle>
+</svg>
+<img alt="Profile" class="w-8 h-8 rounded-full absolute inset-1 object-cover border-2 border-surface-container-lowest" data-alt="close-up portrait of a confident young man with a slight smile in soft morning sunlight, professional headshot style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDhup37BwfYwyrhrIbzsKgYTNqMdeUsazZPY9LJxQ7pQqcpHbbPEGC-NY_i9CZ4YRHa2x2jdBELmcU9xenWo0brctJWFxar0ewQw8eOjIY8GenJwAoSXgEX3tA8pBwiDK-tWGNhDqkS47ATsVsl1rab8iSmt8eFlAx1PIx84kJ8mLSB4UCnrR8opcRBqgYoXh3CCYF_9F8pIpNJMi0N-GSGQ_zRVnFbtHjkixDAIjKh9fV-dF5t3HKUV4AzUOCzi6hAdtOB_6uDyBAb"/>
+</div>
+</div>
+</header>
+<main class="max-w-md mx-auto px-6 pt-8 space-y-8">
+<!-- Hero Header -->
+<section class="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-primary-dim p-8 shadow-[0_20px_50px_rgba(43,102,74,0.3)] group">
+<div class="absolute -right-10 -top-10 w-40 h-40 bg-primary-container/20 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-700"></div>
+<div class="relative z-10">
+<span class="text-on-primary/80 font-bold tracking-widest text-[10px] uppercase">Welcome Back</span>
+<h2 class="text-3xl font-extrabold text-on-primary mt-1 tracking-tight">Good Morning, Alex</h2>
+<div class="flex items-center gap-4 mt-6">
+<div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+<span class="material-symbols-outlined text-secondary-container text-sm" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="text-white font-bold text-sm">12 Day Streak</span>
+</div>
+<div class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+<span class="material-symbols-outlined text-tertiary-container text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-white font-bold text-sm">Level 24</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Today's Sprint Card -->
+<section>
+<div class="bg-surface-container-lowest rounded-lg p-6 shadow-[0_8px_32px_rgba(0,0,0,0.04)] border border-outline-variant/10 relative overflow-hidden">
+<div class="flex justify-between items-start mb-4">
+<div class="p-3 bg-primary-container rounded-2xl">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<span class="bg-tertiary-container/10 text-tertiary px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider">+500 XP</span>
+</div>
+<h3 class="text-xl font-extrabold text-on-surface">Daily Sprint</h3>
+<p class="text-on-surface-variant mt-1 font-medium italic">1 question • ~2 min</p>
+<button class="mt-6 w-full bg-primary text-on-primary py-4 px-6 rounded-xl font-extrabold flex items-center justify-center gap-2 shadow-[0_8px_20px_rgba(43,102,74,0.2)] border-b-4 border-primary-dim squishy-physics">
+                    Start Sprint
+                    <span class="material-symbols-outlined">play_arrow</span>
+</button>
+</div>
+</section>
+<!-- Quick Actions -->
+<section class="grid grid-cols-2 gap-4">
+<div class="bg-secondary-container rounded-lg p-4 flex flex-col justify-between h-32 shadow-[0_8px_24px_rgba(116,87,0,0.15)] squishy-physics cursor-pointer group">
+<span class="material-symbols-outlined text-on-secondary-container text-3xl group-hover:scale-110 transition-transform">search</span>
+<span class="text-on-secondary-container font-extrabold leading-tight">Find a<br/>Course</span>
+</div>
+<div class="bg-surface-container-high rounded-lg p-4 flex flex-col justify-between h-32 shadow-[0_8px_24px_rgba(0,0,0,0.05)] squishy-physics cursor-pointer group">
+<span class="material-symbols-outlined text-primary text-3xl group-hover:scale-110 transition-transform" style="font-variation-settings: 'FILL' 1;">emoji_events</span>
+<span class="text-on-surface font-extrabold leading-tight">Leaderboard<br/>Global</span>
+</div>
+</section>
+<!-- Daily Rituals -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h3 class="text-lg font-extrabold tracking-tight">Daily Rituals</h3>
+<span class="text-primary font-bold text-sm">View All</span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<!-- Ritual 1 -->
+<div class="bg-surface-container-low p-5 rounded-lg border-2 border-transparent hover:border-primary-container transition-all cursor-pointer group">
+<div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:rotate-6 transition-transform">
+<span class="material-symbols-outlined text-blue-500">air</span>
+</div>
+<span class="block font-extrabold text-on-surface">Breathing</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-1">5 Min Session</span>
+</div>
+<!-- Ritual 2 -->
+<div class="bg-surface-container-low p-5 rounded-lg border-2 border-transparent hover:border-primary-container transition-all cursor-pointer group">
+<div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:rotate-6 transition-transform">
+<span class="material-symbols-outlined text-amber-600">edit_note</span>
+</div>
+<span class="block font-extrabold text-on-surface">Journal</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-1">Morning Entry</span>
+</div>
+<!-- Ritual 3 -->
+<div class="bg-surface-container-low p-5 rounded-lg border-2 border-transparent hover:border-primary-container transition-all cursor-pointer group">
+<div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:rotate-6 transition-transform">
+<span class="material-symbols-outlined text-emerald-600">directions_walk</span>
+</div>
+<span class="block font-extrabold text-on-surface">Walk</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-1">2,400 Steps</span>
+</div>
+<!-- Ritual 4 -->
+<div class="bg-surface-container-low p-5 rounded-lg border-2 border-transparent hover:border-primary-container transition-all cursor-pointer group">
+<div class="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-4 group-hover:rotate-6 transition-transform">
+<span class="material-symbols-outlined text-purple-600">menu_book</span>
+</div>
+<span class="block font-extrabold text-on-surface">Learning</span>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mt-1">15 Min Deep</span>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-t-[3rem] z-50 shadow-[0_-8px_40px_rgba(0,0,0,0.08)]">
+<a class="flex flex-col items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 rounded-[2rem] px-5 py-2 scale-105 squishy-physics" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300" href="#">
+<span class="material-symbols-outlined">category</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Segments</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300" href="#">
+<span class="material-symbols-outlined">waves</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Reset</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300" href="#">
+<span class="material-symbols-outlined">trophy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Board</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Coach</span>
+</a>
+</nav>
+</body></html>

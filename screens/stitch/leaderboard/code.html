@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AboveTheGrind - Leaderboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#443100",
+                    "surface-variant": "#dadde2",
+                    "on-error-container": "#570008",
+                    "surface-container-highest": "#dadde2",
+                    "primary-container": "#baf9d4",
+                    "primary-fixed-dim": "#acebc7",
+                    "error-container": "#fb5151",
+                    "on-surface": "#2c2f32",
+                    "on-surface-variant": "#595c5f",
+                    "tertiary-dim": "#764400",
+                    "surface": "#f5f6fa",
+                    "secondary-container": "#fccb52",
+                    "on-secondary-container": "#5b4400",
+                    "secondary-dim": "#654c00",
+                    "secondary-fixed": "#fccb52",
+                    "inverse-primary": "#bfffda",
+                    "on-error": "#ffefee",
+                    "secondary-fixed-dim": "#edbd46",
+                    "primary": "#2b664a",
+                    "outline": "#75777a",
+                    "error": "#b31b25",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#9b9da1",
+                    "surface-container": "#e6e8ed",
+                    "surface-container-high": "#e0e2e8",
+                    "surface-dim": "#d1d5da",
+                    "surface-tint": "#2b664a",
+                    "surface-bright": "#f5f6fa",
+                    "tertiary-container": "#ff9800",
+                    "on-primary-container": "#256145",
+                    "on-tertiary-container": "#4a2800",
+                    "on-tertiary-fixed": "#271300",
+                    "on-tertiary-fixed-variant": "#563000",
+                    "primary-dim": "#1d5a3f",
+                    "on-primary": "#c9ffde",
+                    "inverse-surface": "#0c0e11",
+                    "primary-fixed": "#baf9d4",
+                    "on-secondary": "#fff1da",
+                    "on-primary-fixed-variant": "#306c4f",
+                    "tertiary": "#874e00",
+                    "on-background": "#2c2f32",
+                    "error-dim": "#9f0519",
+                    "outline-variant": "#abadb1",
+                    "tertiary-fixed": "#ff9800",
+                    "secondary": "#745700",
+                    "background": "#f5f6fa",
+                    "on-secondary-fixed-variant": "#674d00",
+                    "surface-container-low": "#eff1f5",
+                    "on-primary-fixed": "#0d4e34",
+                    "tertiary-fixed-dim": "#ec8c00",
+                    "on-tertiary": "#fff0e5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .squishy-physics {
+            transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .text-shadow-sm {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-[0_8px_32px_rgba(43,102,74,0.1)]">
+<div class="flex items-center justify-between px-6 py-4 w-full max-w-5xl mx-auto">
+<button class="hover:scale-110 transition-transform active:scale-95 transition-all duration-200 ease-out text-emerald-800 dark:text-emerald-400">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Plus_Jakarta_Sans'] font-extrabold tracking-tight text-lg text-emerald-900 dark:text-emerald-100 italic">Leaderboard</h1>
+<div class="w-6"></div> <!-- Spacer for center alignment -->
+</div>
+</header>
+<main class="max-w-xl mx-auto px-6 pt-8 space-y-12">
+<!-- Podium Section (Top 3) -->
+<section class="relative flex items-end justify-center gap-4 pt-12 pb-4">
+<!-- Rank 2 -->
+<div class="flex flex-col items-center gap-3 w-1/3">
+<div class="relative group">
+<div class="absolute -top-4 -right-2 bg-slate-300 text-slate-800 font-extrabold px-3 py-1 rounded-full text-xs shadow-lg rotate-12 group-hover:rotate-0 transition-transform">#2</div>
+<img class="w-20 h-20 rounded-xl object-cover shadow-[0_12px_24px_rgba(0,0,0,0.1)] ring-4 ring-white border-2 border-slate-200" data-alt="portrait of a focused young man with athletic wear in a modern gym environment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCGzx2rsE8VppmYb1r5TZk6XmuS2dsLU_qvivruT026SWhK6dizdd80xOx9kMncu52yNROa6vG-cS7YTWy_62KcCS5UZ-NzVBuC5envwvcyR5mvSavP_ZOXUev847x4LuDvTfZBvC5Lva1th42--Djh-NWUu_Bxs9pqfyec9A9Jj8iMXh46yR5N-F9dFdMlYnuys69rHnHkQM1-S2DggDvWOBggod93vw4eKYD7WyoTwldxDESCyc0SDkf4bEE7CJaiNp5lo7XBhYWT"/>
+</div>
+<div class="text-center">
+<p class="font-bold text-sm">Marcus V.</p>
+<div class="bg-tertiary-container/20 text-on-tertiary-fixed-variant px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mt-1">
+                        14.2k XP
+                    </div>
+</div>
+<div class="w-full h-24 bg-surface-container-high rounded-t-lg shadow-inner"></div>
+</div>
+<!-- Rank 1 (Highlighted) -->
+<div class="flex flex-col items-center gap-3 w-1/3 z-10">
+<div class="relative group scale-110">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2">
+<span class="material-symbols-outlined text-secondary text-4xl drop-shadow-xl" data-icon="trophy" style="font-variation-settings: 'FILL' 1;">trophy</span>
+</div>
+<img class="w-24 h-24 rounded-xl object-cover shadow-[0_20px_40px_rgba(43,102,74,0.2)] ring-4 ring-secondary border-2 border-white" data-alt="portrait of a smiling woman athlete with hair tied back against a morning forest background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1UzeS5d1apI9h_kvZceWYTltUju3Pe4121uf1TSDE-KUtQvtN2yOHD3INFVaqkqf3_p6Ge5tIGdphuy-zjOlTJobTdMLC_MVIK0cf0SZa9J7j4W90hAUoEkPlHaN7an_SEXGMyQrYrKhqdvNaKfAV8ovOadoYTvbZ_-XTNPZna6BERUpHDvcFSQtjdeKA3G7sXjGghDMAwGA8oDtD4sV5TKexuDI6UMV0DclqTXGFVc_Uq8hSvhU2fDg8arQQ-zF-tbKhII3nGI5d"/>
+</div>
+<div class="text-center mt-2">
+<p class="font-extrabold text-base text-primary">Sarah J.</p>
+<div class="bg-primary text-on-primary px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mt-1 shadow-lg shadow-primary/20">
+                        18.5k XP
+                    </div>
+</div>
+<div class="w-full h-32 bg-primary rounded-t-lg shadow-[0_-10px_30px_rgba(43,102,74,0.15)] flex justify-center pt-4">
+<span class="material-symbols-outlined text-on-primary/30 text-4xl" data-icon="rocket_launch">rocket_launch</span>
+</div>
+</div>
+<!-- Rank 3 -->
+<div class="flex flex-col items-center gap-3 w-1/3">
+<div class="relative group">
+<div class="absolute -top-4 -left-2 bg-orange-200 text-orange-900 font-extrabold px-3 py-1 rounded-full text-xs shadow-lg -rotate-12 group-hover:rotate-0 transition-transform">#3</div>
+<img class="w-20 h-20 rounded-xl object-cover shadow-[0_12px_24px_rgba(0,0,0,0.1)] ring-4 ring-white border-2 border-orange-100" data-alt="close up headshot of a mature man with a kind smile wearing casual clothing" src="https://lh3.googleusercontent.com/aida-public/AB6AXuASXC9geoJLn8MlK60xtUeqlTwxPPdYsc_W2rMC3K1j10xC5qmkZPfNOfXKCybKqDOKK8y2v1XT3SyVMYvmjJa8AQqVqIuMsx247WHpMWwTvw0mPnWFYKwEQbDbKY54nge1-d6GH0sLArZ0YK0ZDXfTHoEsVbSIY412qc255Yi_Ih5Q-jlZgA5Lc7DdKRI3fpFmPYt6IfzUmHRFxcbOsNrhHTwjMhwdSYnEgQ6LftM1dKrS7TyP8POjOMZbhkiNjf6m1ydz5HgchvkD"/>
+</div>
+<div class="text-center">
+<p class="font-bold text-sm">Elena R.</p>
+<div class="bg-tertiary-container/20 text-on-tertiary-fixed-variant px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest mt-1">
+                        12.8k XP
+                    </div>
+</div>
+<div class="w-full h-16 bg-surface-container rounded-t-lg shadow-inner"></div>
+</div>
+</section>
+<!-- Main Leaderboard List -->
+<section class="space-y-4">
+<!-- Rank Card 4 -->
+<div class="bg-surface-container-lowest p-5 rounded-lg flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:scale-[1.02] transition-all squishy-physics">
+<div class="flex items-center gap-5">
+<span class="font-extrabold text-outline-variant w-6">#4</span>
+<img class="w-12 h-12 rounded-full object-cover" data-alt="young professional man with beard wearing glasses in a brightly lit creative office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChISGrisXYCLuQs6ondXzgMrLzydkclNKFNIkJ9xbDXlYLlkjYnlxBMaj3RDpGkq6vp28-k5N9w1dI7LHTQhcmZs2GR0qZjowE6wnCra55wiNZkZY6-PfjOT2gcJ0rOfwPcmV2NlZJqQFNoHuWd2v39LDGYv7hJcNESM06IEwkhyt5iFyrvmwXzlOkGzzYp265J7CYeitcZiRnr8LKo301Bx5iZcIZ-d7U3AjV7HJaDqXbM-FPqAGTZPQlmgcw43z5fZSd-3D6hy5y"/>
+<div>
+<p class="font-bold text-on-surface">David Chen</p>
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="local_fire_department" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="text-[11px] font-extrabold tracking-tight">24 DAY STREAK</span>
+</div>
+</div>
+</div>
+<div class="bg-tertiary-container text-on-tertiary-container px-4 py-2 rounded-full font-extrabold text-xs shadow-[0_4px_12px_rgba(255,152,0,0.2)]">
+                    9,450 XP
+                </div>
+</div>
+<!-- Rank Card 5 -->
+<div class="bg-surface-container-lowest p-5 rounded-lg flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:scale-[1.02] transition-all squishy-physics">
+<div class="flex items-center gap-5">
+<span class="font-extrabold text-outline-variant w-6">#5</span>
+<img class="w-12 h-12 rounded-full object-cover" data-alt="happy young woman with curly hair laughing outdoors in a park" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAxLuFwFVoAii3TNuzgGt1e5lIjVzPwZV7PKgmab8cB3xTBfdJzKZnLM84vf5bi6kDH8ZO9bZdFj0-vZOEYz--LhLooBy97QTIYC2boQFRuQM-mEv6vbPH9oYDEMNoi0-N2Hc0ug4EGq7QUUMilRlzaiiRwXVlcLNPSQJZr6HKHFQDRJ7J2i8t9LFYAU6u0cY33PcY2fo981wjTplwBH6uFPHJkKdILIh-9eBkBhzG8uuh0btchl5a0LSJpa_oKmJeIXJta6IktQrXJ"/>
+<div>
+<p class="font-bold text-on-surface">Lila Thorne</p>
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="local_fire_department" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="text-[11px] font-extrabold tracking-tight">18 DAY STREAK</span>
+</div>
+</div>
+</div>
+<div class="bg-tertiary-container text-on-tertiary-container px-4 py-2 rounded-full font-extrabold text-xs shadow-[0_4px_12px_rgba(255,152,0,0.2)]">
+                    8,210 XP
+                </div>
+</div>
+<!-- Rank Card 6 (Current User) -->
+<div class="bg-primary-container/30 border-2 border-primary/20 p-5 rounded-lg flex items-center justify-between shadow-[0_8px_32px_rgba(43,102,74,0.08)] scale-[1.03]">
+<div class="flex items-center gap-5">
+<span class="font-extrabold text-primary w-6">#12</span>
+<div class="relative">
+<img class="w-12 h-12 rounded-full object-cover ring-2 ring-primary" data-alt="profile photo of a smiling person with a minimalist background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCl85rvTjtiNhBWxu6rxA4GGGaOp54UL8tL_k54U-Uaec1fmAI2x1j6K4oYC69m8wcFoq5oZgkgweMbw9p8PIolVkrpqd48Xe41yUdbTRyteSX69wkZ_DxJYSSFiVvY3HDq-O7WAu8X0WLKVIlyEAwf6PNP-wsQPGHfdIZI--4FgSuUhqBucjYL5K0ZMtMvfCXGV82wwAGSN4dekjtKaobx7jJ-NzZC3f9CmDYp_90E-fdSrJVPlXiRA8APSe6aUIJsh2AYjUqtnWBC"/>
+<div class="absolute -bottom-1 -right-1 bg-primary text-white p-0.5 rounded-full ring-2 ring-white">
+<span class="material-symbols-outlined text-[10px]" data-icon="star" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<div>
+<p class="font-extrabold text-on-primary-container">Alex (You)</p>
+<div class="flex items-center gap-1.5 text-primary">
+<span class="material-symbols-outlined text-sm" data-icon="local_fire_department" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="text-[11px] font-extrabold tracking-tight">12 DAY STREAK</span>
+</div>
+</div>
+</div>
+<div class="bg-primary text-on-primary px-4 py-2 rounded-full font-extrabold text-xs shadow-[0_4px_12px_rgba(43,102,74,0.3)]">
+                    4,120 XP
+                </div>
+</div>
+<!-- Rank Card 7 -->
+<div class="bg-surface-container-lowest p-5 rounded-lg flex items-center justify-between shadow-[0_8px_32px_rgba(0,0,0,0.04)] hover:scale-[1.02] transition-all squishy-physics opacity-80">
+<div class="flex items-center gap-5">
+<span class="font-extrabold text-outline-variant w-6">#13</span>
+<img class="w-12 h-12 rounded-full object-cover" data-alt="portrait of a man in his late 20s with a neutral expression against a gray wall" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA34-WdivC3Vp2WpZnDJBLtbyaj9lh-gPX8TftBhgC2yk7jfEBtqCqi3JkF_18ZYZkRPMRijbe9NNYMN5qSqyPkZHFtTizXy9kzNsAR_VnX7X2TJXcLr8NXO_WaxgEodLeZp-ZrArXpqgioujEFd9z4qm8zgoCu6_uXDwdsUgP_Gs-dHFm5soWdIrnjowxWL50Umlw6-7QmxV62YrY_zvBRguhX8IeLFXVxomXDH4_kye6mirzal_AshUb8J0H8XjypkGOH2GdVDS51"/>
+<div>
+<p class="font-bold text-on-surface">Tom Hardie</p>
+<div class="flex items-center gap-1.5 text-secondary">
+<span class="material-symbols-outlined text-sm" data-icon="local_fire_department" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+<span class="text-[11px] font-extrabold tracking-tight">5 DAY STREAK</span>
+</div>
+</div>
+</div>
+<div class="bg-tertiary-container text-on-tertiary-container px-4 py-2 rounded-full font-extrabold text-xs shadow-[0_4px_12px_rgba(255,152,0,0.2)]">
+                    3,980 XP
+                </div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-t-[3rem] z-50 shadow-[0_-8px_40px_rgba(0,0,0,0.08)]">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="category">category</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Segments</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="waves">waves</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Reset</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 rounded-[2rem] px-5 py-2 scale-105 active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="trophy" style="font-variation-settings: 'FILL' 1;">trophy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Board</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Coach</span>
+</a>
+</nav>
+</body></html>

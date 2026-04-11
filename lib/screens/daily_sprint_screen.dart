@@ -197,7 +197,8 @@ class _DailySprintScreenState extends State<DailySprintScreen> {
 
                     if (!mounted) return;
                     if (_didAward) {
-                      navigator.pop();
+                      // Return a result so Home can trigger celebratory UI.
+                      navigator.pop(true);
                     }
                   },
             style: FilledButton.styleFrom(

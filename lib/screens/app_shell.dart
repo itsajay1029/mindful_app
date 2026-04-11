@@ -6,6 +6,7 @@ import 'leaderboard_screen.dart';
 import 'reset_studio_screen.dart';
 import 'segments_screen.dart';
 import '../services/local_notification_service.dart';
+import '../ui/emerald_orbit/widgets/eo_bottom_nav.dart';
 
 /// Main app container with bottom navigation.
 class AppShell extends StatefulWidget {
@@ -29,8 +30,6 @@ class _AppShellState extends State<AppShell> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
     // Schedule once per app session.
     if (!_scheduledReminder) {
       _scheduledReminder = true;
@@ -42,18 +41,9 @@ class _AppShellState extends State<AppShell> {
 
     return Scaffold(
       body: _tabs[_index],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
-        backgroundColor: Colors.white,
-        indicatorColor: cs.primary.withValues(alpha: 0.15),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_rounded), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.grid_view_rounded), label: 'Segments'),
-          NavigationDestination(icon: Icon(Icons.headphones_rounded), label: 'Reset'),
-          NavigationDestination(icon: Icon(Icons.emoji_events_rounded), label: 'Board'),
-          NavigationDestination(icon: Icon(Icons.chat_bubble_rounded), label: 'Coach'),
-        ],
+      bottomNavigationBar: EoBottomNav(
+        index: _index,
+        onSelected: (i) => setState(() => _index = i),
       ),
     );
   }

@@ -1,404 +1,436 @@
+import 'package:confetti/confetti.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-import '../services/firestore_service.dart';
-import '../widgets/pressable_card.dart';
-import 'daily_sprint_screen.dart';
 import '../services/auth_service.dart';
+import '../services/firestore_service.dart';
+import '../ui/emerald_orbit/tokens.dart';
+import '../ui/emerald_orbit/widgets/eo_avatar_ring.dart';
+import '../ui/emerald_orbit/widgets/eo_card.dart';
+import '../ui/emerald_orbit/widgets/eo_glass.dart';
+import '../ui/emerald_orbit/widgets/eo_tactile_button.dart';
 import 'auth_gate.dart';
+import 'daily_sprint_screen.dart';
 import 'leaderboard_screen.dart';
 import 'learning_hub_screen.dart';
+import 'riddle_quest_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+/// Home hub redesigned to match Stitch exports:
+/// - `screens/stitch/home_hub_1`
+/// - `screens/stitch/home_hub_2` (includes the Brain Break / Riddle card)
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
-  static const _bg = Color(0xFFF6F7FB);
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
 
-  String _firstNameFromUserDoc(Map<String, dynamic> data) {
+class _HomeScreenState extends State<HomeScreen> {
+  late final ConfettiController _confetti;
+
+  @override
+  void initState() {
+    super.initState();
+    _confetti = ConfettiController(duration: const Duration(milliseconds: 900));
+  }
+
+  @override
+  void dispose() {
+    _confetti.dispose();
+    super.dispose();
+  }
+
+  String _firstName(Map<String, dynamic> data) {
     final firstName = (data['firstName'] as String?)?.trim() ?? '';
     final displayName = (data['displayName'] as String?)?.trim() ?? '';
     final token = displayName.isEmpty ? '' : displayName.split(RegExp(r'\s+')).first;
     return firstName.isNotEmpty ? firstName : token;
   }
 
+  double _xpProgress(int xp) {
+    const goal = 100;
+    return (xp % goal) / goal;
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Logout?'),
+        content: const Text('You will be signed out from this device.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(false), child: const Text('Cancel')),
+          FilledButton(onPressed: () => Navigator.of(ctx).pop(true), child: const Text('Logout')),
+        ],
+      ),
+    );
+
+    if (ok != true) return;
+    await AuthService().signOut();
+    if (!context.mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const AuthGate()),
+      (route) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
-    final cs = Theme.of(context).colorScheme;
-    final firestore = FirestoreService();
-    final auth = AuthService();
-
     if (user == null) {
       return const Scaffold(body: Center(child: Text('No user found.')));
     }
 
+    final cs = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: _bg,
-      body: SafeArea(
-        child: StreamBuilder(
-          stream: firestore.streamUserDoc(user.uid),
-          builder: (context, AsyncSnapshot userDocSnap) {
-            if (userDocSnap.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            final data = (userDocSnap.data?.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
-            final name = _firstNameFromUserDoc(data);
-            final xp = (data['xp'] as num?)?.toInt() ?? 0;
-            final streak = (data['streakCurrent'] as num?)?.toInt() ?? 0;
-
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 24),
-              children: [
-                _HeroHeader(
-                  greeting: name.isEmpty ? 'Welcome back' : 'Good Morning, $name',
-                  xp: xp,
-                  streak: streak,
-                  photoUrl: user.photoURL,
-                  onLogout: () async {
-                    final ok = await showDialog<bool>(
-                      context: context,
-                      builder: (ctx) => AlertDialog(
-                        title: const Text('Logout?'),
-                        content: const Text('You will be signed out from this device.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(ctx).pop(false),
-                            child: const Text('Cancel'),
-                          ),
-                          FilledButton(
-                            onPressed: () => Navigator.of(ctx).pop(true),
-                            child: const Text('Logout'),
-                          ),
-                        ],
-                      ),
-                    );
-
-                    if (ok != true) return;
-                    await auth.signOut();
-                    if (!context.mounted) return;
-                    Navigator.of(context).pushAndRemoveUntil(
-                      MaterialPageRoute(builder: (_) => const AuthGate()),
-                      (route) => false,
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 14),
-
-                // Today's Sprint
-                PressableCard(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const DailySprintScreen()),
-                    );
-                  },
-                  border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
-                  padding: const EdgeInsets.all(16),
+      backgroundColor: EoColors.background,
+      body: Stack(
+        children: [
+          // ===== Top glass app bar (Stitch floating HUD) =====
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 8, 14, 0),
+                child: EoGlass(
+                  borderRadius: BorderRadius.circular(EoRadii.xl),
+                  blur: 24,
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 32,
+                      offset: const Offset(0, 12),
+                      color: cs.primary.withValues(alpha: 0.10),
+                    ),
+                  ],
+                  border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.10)),
+                  padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                   child: Row(
                     children: [
+                      IconButton(
+                        onPressed: () => _logout(context),
+                        icon: Icon(Icons.arrow_back_rounded, color: cs.primary),
+                        tooltip: 'Logout',
+                      ),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Today's Sprint",
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Daily 10‑minute session to level up.',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.black.withValues(alpha: 0.62),
-                                    height: 1.2,
-                                  ),
-                            ),
-                          ],
+                        child: Text(
+                          'AboveTheGrind',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                fontStyle: FontStyle.italic,
+                                color: EoColors.onSurface,
+                              ),
                         ),
                       ),
-                      FilledButton(
-                        style: FilledButton.styleFrom(
-                          backgroundColor: cs.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                        ),
-                        onPressed: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const DailySprintScreen()),
+                      StreamBuilder(
+                        stream: FirestoreService().streamUserDoc(user.uid),
+                        builder: (context, snap) {
+                          final data = (snap.data?.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
+                          final xp = (data['xp'] as num?)?.toInt() ?? 0;
+                          return EoAvatarRing(
+                            photoUrl: user.photoURL,
+                            progress: _xpProgress(xp),
+                            size: 40,
+                            ringWidth: 3,
+                            ringColor: cs.primary,
                           );
                         },
-                        child: const Text('Start'),
                       ),
                     ],
                   ),
                 ),
+              ),
+            ),
+          ),
 
-                const SizedBox(height: 16),
+          // ===== Content =====
+          Padding(
+            padding: const EdgeInsets.only(top: 92),
+            child: StreamBuilder(
+              stream: FirestoreService().streamUserDoc(user.uid),
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
 
-                // Daily Rituals
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                final data = (snap.data?.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
+                final name = _firstName(data);
+                final xp = (data['xp'] as num?)?.toInt() ?? 0;
+                final streak = (data['streakCurrent'] as num?)?.toInt() ?? 0;
+
+                Future<void> openSprint() async {
+                  final didAward = await Navigator.of(context).push<bool>(
+                    MaterialPageRoute(builder: (_) => const DailySprintScreen()),
+                  );
+                  if (didAward == true && mounted) {
+                    _confetti.play();
+                  }
+                }
+
+                return ListView(
+                  padding: const EdgeInsets.fromLTRB(18, 18, 18, 140),
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Daily Rituals',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                              ),
+                    // Hero header
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [EoColors.primary, EoColors.primaryDim],
                         ),
-                        const SizedBox(height: 3),
-                        Text(
-                          'Build healthy habits',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Colors.black.withValues(alpha: 0.55),
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        showModalBottomSheet<void>(
-                          context: context,
-                          showDragHandle: true,
-                          builder: (ctx) => const _RitualsBottomSheet(),
-                        );
-                      },
-                      child: const Text('View All  ›'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-
-                _RitualsPanel(
-                  onLearningTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const LearningHubScreen()),
-                    );
-                  },
-                ),
-
-                const SizedBox(height: 14),
-
-                // Track progress CTA
-                PressableCard(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
-                    );
-                  },
-                  borderRadius: BorderRadius.circular(22),
-                  padding: EdgeInsets.zero,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(22),
-                    child: Stack(
-                      children: [
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: _SoftLandscapePainter(
-                              primary: cs.primary,
-                              secondary: cs.secondary,
-                            ),
+                        borderRadius: BorderRadius.circular(EoRadii.lg),
+                        boxShadow: [
+                          BoxShadow(
+                            blurRadius: 50,
+                            offset: const Offset(0, 18),
+                            color: EoColors.primary.withValues(alpha: 0.30),
                           ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Track Progress',
-                                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                            fontWeight: FontWeight.w900,
-                                            color: Colors.white,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      'See your XP, streak and rank',
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: Colors.white.withValues(alpha: 0.90),
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                  ],
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'WELCOME BACK',
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: cs.onPrimary.withValues(alpha: 0.80),
+                                  letterSpacing: 1.6,
+                                  fontWeight: FontWeight.w900,
                                 ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            name.isEmpty ? 'Good Morning' : 'Good Morning, $name',
+                            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                  color: cs.onPrimary,
+                                  fontWeight: FontWeight.w900,
+                                ),
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              _HeroPill(icon: Icons.local_fire_department_rounded, label: '$streak Day Streak', tint: EoColors.secondaryContainer),
+                              _HeroPill(icon: Icons.star_rounded, label: 'XP $xp', tint: EoColors.tertiaryContainer),
+                            ],
+                          )
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Daily Sprint card
+                    EoCard(
+                      padding: const EdgeInsets.all(20),
+                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.10)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: cs.primaryContainer,
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: Icon(Icons.bolt_rounded, color: cs.primary),
                               ),
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.18),
+                                  color: cs.tertiaryContainer.withValues(alpha: 0.12),
                                   borderRadius: BorderRadius.circular(999),
-                                  border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Text(
-                                      'Open',
-                                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.white),
-                                  ],
+                                child: Text(
+                                  '+20 XP',
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                        color: cs.tertiary,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1.2,
+                                      ),
                                 ),
                               ),
                             ],
                           ),
+                          const SizedBox(height: 12),
+                          Text('Daily Sprint', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                          const SizedBox(height: 4),
+                          Text(
+                            '1 question • ~2 min',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: EoColors.onSurfaceVariant,
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          const SizedBox(height: 14),
+                          SizedBox(
+                            width: double.infinity,
+                            child: EoTactileButton.primary(
+                              label: 'Start Sprint',
+                              icon: const Icon(Icons.play_arrow_rounded),
+                              onPressed: openSprint,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Brain Break / Riddle card (Home Hub 2)
+                    EoCard(
+                      padding: const EdgeInsets.all(20),
+                      border: Border.all(color: EoColors.secondaryContainer.withValues(alpha: 0.22)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: EoColors.secondaryContainer.withValues(alpha: 0.35),
+                                  borderRadius: BorderRadius.circular(18),
+                                ),
+                                child: const Icon(Icons.extension_rounded, color: EoColors.onSecondaryContainer),
+                              ),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: EoColors.secondaryContainer.withValues(alpha: 0.25),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  'Brain Break'.toUpperCase(),
+                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                        color: EoColors.onSecondaryContainer,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 1.2,
+                                      ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 12),
+                          Text('Riddle of the Day', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Solve to boost your streak!',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: EoColors.onSurfaceVariant,
+                                  fontStyle: FontStyle.italic,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          const SizedBox(height: 14),
+                          SizedBox(
+                            width: double.infinity,
+                            child: EoTactileButton.tonal(
+                              label: 'Play now',
+                              icon: const Icon(Icons.extension_rounded),
+                              toneColor: EoColors.secondaryContainer,
+                              onPressed: () {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(builder: (_) => const RiddleQuestScreen()),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Quick actions bento
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _BentoTile(
+                            color: EoColors.secondaryContainer,
+                            icon: Icons.search_rounded,
+                            iconColor: EoColors.onSecondaryContainer,
+                            title: 'Find a\nCourse',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const LearningHubScreen()),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _BentoTile(
+                            color: EoColors.surfaceContainerHigh,
+                            icon: Icons.emoji_events_rounded,
+                            iconColor: cs.primary,
+                            title: 'Leaderboard\nGlobal',
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(builder: (_) => const LeaderboardScreen()),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                ),
 
-                const SizedBox(height: 14),
+                    const SizedBox(height: 18),
 
-                // Browse courses CTA
-                PressableCard(
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const LearningHubScreen()),
-                    );
-                  },
-                  border: Border.all(color: Colors.black.withValues(alpha: 0.04)),
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      Container(
-                        height: 44,
-                        width: 44,
-                        decoration: BoxDecoration(
-                          color: cs.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(Icons.school_rounded, color: cs.primary),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Continue learning',
-                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Explore courses tailored to your goals',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.black.withValues(alpha: 0.6),
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.black.withValues(alpha: 0.35)),
-                    ],
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _HeroHeader extends StatelessWidget {
-  const _HeroHeader({
-    required this.greeting,
-    required this.xp,
-    required this.streak,
-    required this.photoUrl,
-    required this.onLogout,
-  });
-
-  final String greeting;
-  final int xp;
-  final int streak;
-  final String? photoUrl;
-  final VoidCallback onLogout;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(26),
-      child: Stack(
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  cs.primary.withValues(alpha: 0.96),
-                  cs.secondary.withValues(alpha: 0.82),
-                ],
-              ),
-              boxShadow: [
-                BoxShadow(
-                  blurRadius: 26,
-                  offset: const Offset(0, 16),
-                  color: cs.primary.withValues(alpha: 0.22),
-                )
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        greeting,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              color: Colors.white,
-                              fontWeight: FontWeight.w900,
-                            ),
-                      ),
+                    // Rituals
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Daily Rituals', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+                        TextButton(
+                          onPressed: () {
+                            showModalBottomSheet<void>(
+                              context: context,
+                              showDragHandle: true,
+                              builder: (ctx) => const _RitualsBottomSheet(),
+                            );
+                          },
+                          child: const Text('View All'),
+                        )
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    _Avatar(photoUrl: photoUrl, fallbackName: greeting),
+                    const SizedBox(height: 12),
+                    const _RitualsGrid(),
+                    const SizedBox(height: 28),
                   ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    _StatPill(icon: Icons.auto_awesome, label: 'XP', value: xp.toString()),
-                    const SizedBox(width: 10),
-                    _StatPill(icon: Icons.local_fire_department_rounded, label: 'Streak', value: streak.toString()),
-                  ],
-                ),
-              ],
+                );
+              },
             ),
           ),
 
+          // Confetti overlay
           Positioned(
-            right: 10,
-            top: 10,
-            child: IconButton(
-              onPressed: onLogout,
-              icon: Icon(Icons.logout_rounded, color: Colors.white.withValues(alpha: 0.95)),
-              tooltip: 'Logout',
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SizedBox(
+              height: 0,
+              child: ConfettiWidget(
+                confettiController: _confetti,
+                blastDirectionality: BlastDirectionality.explosive,
+                emissionFrequency: 0.08,
+                numberOfParticles: 18,
+                maxBlastForce: 18,
+                minBlastForce: 8,
+                gravity: 0.22,
+                colors: [cs.secondary, cs.primary, cs.tertiary, Colors.white],
+              ),
             ),
           ),
         ],
@@ -407,39 +439,32 @@ class _HeroHeader extends StatelessWidget {
   }
 }
 
-class _StatPill extends StatelessWidget {
-  const _StatPill({required this.icon, required this.label, required this.value});
+class _HeroPill extends StatelessWidget {
+  const _HeroPill({required this.icon, required this.label, required this.tint});
   final IconData icon;
   final String label;
-  final String value;
+  final Color tint;
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
+        color: Colors.white.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: Colors.white.withValues(alpha: 0.92)),
-          const SizedBox(width: 6),
-          Text(
-            value,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                ),
-          ),
+          Icon(icon, size: 16, color: tint.withValues(alpha: 0.95)),
           const SizedBox(width: 6),
           Text(
             label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  fontWeight: FontWeight.w800,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: cs.onPrimary,
+                  fontWeight: FontWeight.w900,
                 ),
           ),
         ],
@@ -448,163 +473,129 @@ class _StatPill extends StatelessWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.photoUrl, required this.fallbackName});
+class _BentoTile extends StatelessWidget {
+  const _BentoTile({
+    required this.color,
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.onTap,
+  });
 
-  final String? photoUrl;
-  final String fallbackName;
-
-  String _initials(String raw) {
-    final parts = raw
-        .replaceAll(RegExp(r'[^A-Za-z\s]'), '')
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((p) => p.isNotEmpty)
-        .toList();
-    if (parts.isEmpty) return 'U';
-    final first = parts.first;
-    final second = parts.length > 1 ? parts[1] : '';
-    return (first.isNotEmpty ? first[0] : '') + (second.isNotEmpty ? second[0] : '');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final initials = _initials(fallbackName);
-    return Container(
-      height: 46,
-      width: 46,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.20)),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: photoUrl == null || photoUrl!.trim().isEmpty
-            ? Center(
-                child: Text(
-                  initials.toUpperCase(),
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-              )
-            : Image.network(
-                photoUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) => Center(
-                  child: Text(
-                    initials.toUpperCase(),
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                        ),
-                  ),
-                ),
-              ),
-      ),
-    );
-  }
-}
-
-// NOTE: old _RitualTile removed after we switched to the richer Rituals panel.
-
-class _RitualsPanel extends StatelessWidget {
-  const _RitualsPanel({required this.onLearningTap});
-
-  final VoidCallback onLearningTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(22),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _SoftLandscapePainter(primary: cs.primary, secondary: cs.secondary),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
-            child: Row(
-              children: [
-                Expanded(
-                  child: PressableCard(
-                    onTap: () {},
-                    borderRadius: BorderRadius.circular(18),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                    child: _MiniRitual(icon: Icons.self_improvement_rounded, label: 'Breathing'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: PressableCard(
-                    onTap: () {},
-                    borderRadius: BorderRadius.circular(18),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                    child: _MiniRitual(icon: Icons.edit_note_rounded, label: 'Journal'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: PressableCard(
-                    onTap: () {},
-                    borderRadius: BorderRadius.circular(18),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                    child: _MiniRitual(icon: Icons.directions_walk_rounded, label: 'Walk'),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: PressableCard(
-                    onTap: onLearningTap,
-                    borderRadius: BorderRadius.circular(18),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-                    child: _MiniRitual(icon: Icons.lightbulb_rounded, label: 'Learning'),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniRitual extends StatelessWidget {
-  const _MiniRitual({required this.icon, required this.label});
+  final Color color;
   final IconData icon;
-  final String label;
+  final Color iconColor;
+  final String title;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(EoRadii.lg),
+      child: Container(
+        height: 128,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color,
+          borderRadius: BorderRadius.circular(EoRadii.lg),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 24,
+              offset: const Offset(0, 12),
+              color: Colors.black.withValues(alpha: 0.06),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: iconColor, size: 30),
+            const Spacer(),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                    height: 1.05,
+                    color: iconColor,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RitualsGrid extends StatelessWidget {
+  const _RitualsGrid();
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          height: 40,
-          width: 40,
+    void comingSoon(String label) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label — coming soon')));
+    }
+
+    Widget tile({required IconData icon, required Color iconColor, required String title, required String meta, required VoidCallback onTap}) {
+      return InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(EoRadii.lg),
+        child: Container(
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: cs.primary.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(14),
+            color: EoColors.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(EoRadii.lg),
+            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.08), width: 2),
           ),
-          child: Icon(icon, color: cs.primary),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                fontWeight: FontWeight.w900,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                height: 48,
+                width: 48,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                ),
+                child: Icon(icon, color: iconColor),
               ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          textAlign: TextAlign.center,
+              const SizedBox(height: 12),
+              Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+              const SizedBox(height: 6),
+              Text(
+                meta.toUpperCase(),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: EoColors.onSurfaceVariant,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.1,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisSpacing: 12,
+      mainAxisSpacing: 12,
+      childAspectRatio: 1.05,
+      children: [
+        tile(icon: Icons.air_rounded, iconColor: Colors.blue, title: 'Breathing', meta: '5 min session', onTap: () => comingSoon('Breathing')),
+        tile(icon: Icons.edit_note_rounded, iconColor: Colors.amber.shade700, title: 'Journal', meta: 'Morning entry', onTap: () => comingSoon('Journal')),
+        tile(icon: Icons.directions_walk_rounded, iconColor: Colors.green.shade700, title: 'Walk', meta: '2,400 steps', onTap: () => comingSoon('Walk')),
+        tile(
+          icon: Icons.menu_book_rounded,
+          iconColor: Colors.purple,
+          title: 'Learning',
+          meta: '15 min deep',
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LearningHubScreen()));
+          },
         ),
       ],
     );
@@ -628,112 +619,47 @@ class _RitualsBottomSheet extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 6, 16, 16),
+        padding: const EdgeInsets.fromLTRB(18, 6, 18, 18),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'All Rituals',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-            ),
-            const SizedBox(height: 10),
+            Text('All Rituals', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+            const SizedBox(height: 12),
             ..._items.map(
               (it) => Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: PressableCard(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: EoCard(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.10)),
                   onTap: () {
                     Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('${it.title} — coming soon')),
-                    );
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${it.title} — coming soon')));
                   },
-                  border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   child: Row(
                     children: [
                       Container(
-                        height: 40,
-                        width: 40,
+                        height: 42,
+                        width: 42,
                         decoration: BoxDecoration(
-                          color: cs.primary.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(14),
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(16),
                         ),
                         child: Icon(it.icon, color: cs.primary),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          it.title,
-                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w900,
-                              ),
-                        ),
+                        child: Text(it.title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
                       ),
-                      Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Colors.black.withValues(alpha: 0.35)),
+                      Icon(Icons.chevron_right_rounded, color: EoColors.onSurfaceVariant.withValues(alpha: 0.60)),
                     ],
                   ),
                 ),
               ),
-            ),
+            )
           ],
         ),
       ),
     );
-  }
-}
-
-class _SoftLandscapePainter extends CustomPainter {
-  _SoftLandscapePainter({required this.primary, required this.secondary});
-
-  final Color primary;
-  final Color secondary;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final rect = Offset.zero & size;
-    final bgPaint = Paint()
-      ..shader = LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          primary.withValues(alpha: 0.95),
-          secondary.withValues(alpha: 0.85),
-        ],
-      ).createShader(rect);
-    canvas.drawRect(rect, bgPaint);
-
-    // Layer 1
-    final p1 = Path()
-      ..moveTo(0, size.height * 0.70)
-      ..quadraticBezierTo(size.width * 0.30, size.height * 0.55, size.width * 0.60, size.height * 0.70)
-      ..quadraticBezierTo(size.width * 0.82, size.height * 0.82, size.width, size.height * 0.66)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(
-      p1,
-      Paint()..color = Colors.white.withValues(alpha: 0.14),
-    );
-
-    // Layer 2
-    final p2 = Path()
-      ..moveTo(0, size.height * 0.82)
-      ..quadraticBezierTo(size.width * 0.25, size.height * 0.74, size.width * 0.50, size.height * 0.84)
-      ..quadraticBezierTo(size.width * 0.76, size.height * 0.96, size.width, size.height * 0.80)
-      ..lineTo(size.width, size.height)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(
-      p2,
-      Paint()..color = Colors.white.withValues(alpha: 0.10),
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant _SoftLandscapePainter oldDelegate) {
-    return oldDelegate.primary != primary || oldDelegate.secondary != secondary;
   }
 }

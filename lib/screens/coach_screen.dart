@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../ui/emerald_orbit/tokens.dart';
+import '../ui/emerald_orbit/widgets/eo_glass.dart';
+
 /// MVP Coach (AI Q&A): chat UI with placeholder responses.
 class CoachScreen extends StatefulWidget {
   const CoachScreen({super.key});
@@ -64,108 +67,343 @@ class _CoachScreenState extends State<CoachScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
+    // NOTE: This screen is rebuilt to match `screens/stitch/coach_chat/code.html`.
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7FB),
-      appBar: AppBar(title: const Text('Coach Guide')),
-      body: Column(
+      backgroundColor: EoColors.surface,
+      body: Stack(
         children: [
-          Expanded(
-            child: ListView.builder(
-              controller: _scroll,
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-              itemCount: _messages.length,
-              itemBuilder: (context, i) {
-                final m = _messages[i];
-                return _Bubble(message: m);
-              },
+          Column(
+            children: [
+              _CoachTopBar(
+                onBack: () => Navigator.of(context).maybePop(),
+              ),
+              Expanded(
+                child: ListView.builder(
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 160),
+                  itemCount: _messages.length + 1,
+                  itemBuilder: (context, i) {
+                    if (i == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 24),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: EoColors.surfaceContainer,
+                              borderRadius: BorderRadius.circular(EoRadii.full),
+                            ),
+                            child: Text(
+                              'TODAY',
+                              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                    color: EoColors.onSurfaceVariant,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 2.0,
+                                    fontSize: 10,
+                                  ),
+                            ),
+                          ),
+                        ),
+                      );
+                    }
+
+                    final m = _messages[i - 1];
+                    return _CoachChatBubble(message: m);
+                  },
+                ),
+              ),
+            ],
+          ),
+          // Bottom composer (fixed) — matches Stitch (rounded-full, glassy, add + send)
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            child: SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 18),
+                child: EoGlass(
+                  blur: 24,
+                  color: EoColors.surfaceContainerLowest.withValues(alpha: 0.90),
+                  borderRadius: BorderRadius.circular(EoRadii.full),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 40,
+                      offset: const Offset(0, 14),
+                      color: Colors.black.withValues(alpha: 0.12),
+                    ),
+                  ],
+                  padding: const EdgeInsets.all(8),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        onPressed: () {},
+                        icon: Icon(Icons.add_circle, color: EoColors.slate400),
+                      ),
+                      Expanded(
+                        child: TextField(
+                          controller: _controller,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _send(),
+                          decoration: InputDecoration(
+                            hintText: 'Ask anything...',
+                            border: InputBorder.none,
+                            isCollapsed: true,
+                            filled: false,
+                            contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+                            hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  color: EoColors.slate400,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                                color: EoColors.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: _send,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: cs.primary,
+                            borderRadius: BorderRadius.circular(EoRadii.full),
+                            boxShadow: [
+                              BoxShadow(
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                                color: cs.primary.withValues(alpha: 0.30),
+                              ),
+                            ],
+                          ),
+                          child: Icon(Icons.send, color: cs.onPrimary, size: 20),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              border: Border(top: BorderSide(color: Colors.black.withValues(alpha: 0.06))),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _send(),
-                    decoration: InputDecoration(
-                      hintText: 'Ask anything…',
-                      filled: true,
-                      fillColor: const Color(0xFFF6F7FB),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(16),
-                        borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                FilledButton(
-                  onPressed: _send,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: cs.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                  ),
-                  child: const Icon(Icons.send_rounded, size: 18),
-                ),
-              ],
-            ),
-          )
         ],
       ),
     );
   }
 }
 
-class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message});
+class _CoachTopBar extends StatelessWidget {
+  const _CoachTopBar({required this.onBack});
+
+  final VoidCallback onBack;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.80),
+          boxShadow: [
+            BoxShadow(
+              blurRadius: 32,
+              offset: const Offset(0, 8),
+              color: cs.primary.withValues(alpha: 0.10),
+            )
+          ],
+        ),
+        child: Row(
+          children: [
+            InkWell(
+              onTap: onBack,
+              borderRadius: BorderRadius.circular(999),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(Icons.arrow_back, color: EoColors.emerald800),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: EoColors.primaryContainer,
+                borderRadius: BorderRadius.circular(EoRadii.full),
+              ),
+              child: Icon(Icons.smart_toy, color: cs.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Coach Guide',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: EoColors.emerald900,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.2,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: cs.primary,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        'ONLINE NOW',
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: EoColors.onSurfaceVariant,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 2.0,
+                              fontSize: 10,
+                            ),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+            Icon(Icons.info, color: EoColors.slate400),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CoachChatBubble extends StatelessWidget {
+  const _CoachChatBubble({required this.message});
   final _ChatMessage message;
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final isCoach = message.fromCoach;
+    final time = '09:12 AM';
 
-    final bubbleColor = isCoach ? Colors.white : cs.primary;
-    final textColor = isCoach ? Colors.black.withValues(alpha: 0.85) : Colors.white;
-
-    return Align(
-      alignment: isCoach ? Alignment.centerLeft : Alignment.centerRight,
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 320),
-        margin: const EdgeInsets.only(bottom: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: bubbleColor,
-          borderRadius: BorderRadius.circular(16),
-          border: isCoach ? Border.all(color: Colors.black.withValues(alpha: 0.06)) : null,
-          boxShadow: [
-            BoxShadow(
-              blurRadius: 16,
-              offset: const Offset(0, 10),
-              color: Colors.black.withValues(alpha: 0.05),
-            )
+    if (isCoach) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 24),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: EoColors.primaryContainer,
+                borderRadius: BorderRadius.circular(EoRadii.full),
+              ),
+              child: Icon(Icons.smart_toy, color: cs.primary, size: 18),
+            ),
+            const SizedBox(width: 12),
+            Flexible(
+              child: Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: EoColors.surfaceContainerLowest,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(EoRadii.lg),
+                    topRight: Radius.circular(EoRadii.lg),
+                    bottomRight: Radius.circular(EoRadii.lg),
+                    bottomLeft: Radius.circular(EoRadii.d), // rounded-bl-none
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      blurRadius: 24,
+                      offset: const Offset(0, 4),
+                      color: Colors.black.withValues(alpha: 0.04),
+                    )
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      message.text,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: EoColors.onSurface,
+                            height: 1.4,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      time,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: EoColors.onSurfaceVariant.withValues(alpha: 0.60),
+                          ),
+                    )
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
-        child: Text(
-          message.text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: textColor,
-                fontWeight: FontWeight.w600,
-                height: 1.25,
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: cs.primary,
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(EoRadii.lg),
+                topRight: Radius.circular(EoRadii.lg),
+                bottomLeft: Radius.circular(EoRadii.lg),
+                bottomRight: Radius.circular(EoRadii.d), // rounded-br-none
               ),
-        ),
+              boxShadow: [
+                BoxShadow(
+                  blurRadius: 32,
+                  offset: const Offset(0, 8),
+                  color: cs.primary.withValues(alpha: 0.15),
+                )
+              ],
+            ),
+            child: Text(
+              message.text,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: cs.onPrimary,
+                    height: 1.4,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: Text(
+              time,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: EoColors.onSurfaceVariant.withValues(alpha: 0.60),
+                  ),
+            ),
+          ),
+        ],
       ),
     );
   }

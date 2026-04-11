@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AboveTheGrind - Daily Sprint</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#443100",
+                    "surface-variant": "#dadde2",
+                    "on-error-container": "#570008",
+                    "surface-container-highest": "#dadde2",
+                    "primary-container": "#baf9d4",
+                    "primary-fixed-dim": "#acebc7",
+                    "error-container": "#fb5151",
+                    "on-surface": "#2c2f32",
+                    "on-surface-variant": "#595c5f",
+                    "tertiary-dim": "#764400",
+                    "surface": "#f5f6fa",
+                    "secondary-container": "#fccb52",
+                    "on-secondary-container": "#5b4400",
+                    "secondary-dim": "#654c00",
+                    "secondary-fixed": "#fccb52",
+                    "inverse-primary": "#bfffda",
+                    "on-error": "#ffefee",
+                    "secondary-fixed-dim": "#edbd46",
+                    "primary": "#2b664a",
+                    "outline": "#75777a",
+                    "error": "#b31b25",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#9b9da1",
+                    "surface-container": "#e6e8ed",
+                    "surface-container-high": "#e0e2e8",
+                    "surface-dim": "#d1d5da",
+                    "surface-tint": "#2b664a",
+                    "surface-bright": "#f5f6fa",
+                    "tertiary-container": "#ff9800",
+                    "on-primary-container": "#256145",
+                    "on-tertiary-container": "#4a2800",
+                    "on-tertiary-fixed": "#271300",
+                    "on-tertiary-fixed-variant": "#563000",
+                    "primary-dim": "#1d5a3f",
+                    "on-primary": "#c9ffde",
+                    "inverse-surface": "#0c0e11",
+                    "primary-fixed": "#baf9d4",
+                    "on-secondary": "#fff1da",
+                    "on-primary-fixed-variant": "#306c4f",
+                    "tertiary": "#874e00",
+                    "on-background": "#2c2f32",
+                    "error-dim": "#9f0519",
+                    "outline-variant": "#abadb1",
+                    "tertiary-fixed": "#ff9800",
+                    "secondary": "#745700",
+                    "background": "#f5f6fa",
+                    "on-secondary-fixed-variant": "#674d00",
+                    "surface-container-low": "#eff1f5",
+                    "on-primary-fixed": "#0d4e34",
+                    "tertiary-fixed-dim": "#ec8c00",
+                    "on-tertiary": "#fff0e5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .squishy-physics:active {
+            transform: scale(0.92);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-[0_8px_32px_rgba(43,102,74,0.1)]">
+<div class="flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<button class="hover:scale-110 transition-transform active:scale-95 transition-all duration-200 ease-out text-emerald-800">
+<span class="material-symbols-outlined" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Plus_Jakarta_Sans'] font-extrabold tracking-tight text-lg text-emerald-800">Daily Sprint</h1>
+</div>
+<div class="flex items-center gap-2 bg-tertiary-container/20 px-3 py-1.5 rounded-full">
+<span class="material-symbols-outlined text-tertiary text-lg" style="font-variation-settings: 'FILL' 1;">bolt</span>
+<span class="text-tertiary-dim font-bold text-sm tracking-tight">4 DAY STREAK</span>
+</div>
+</div>
+</header>
+<main class="max-w-2xl mx-auto px-6 pt-8 space-y-8">
+<!-- Progress Header -->
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<span class="bg-primary-container text-on-primary-fixed-variant px-4 py-1.5 rounded-full font-bold text-xs tracking-widest uppercase shadow-sm">1 question • ~2 min</span>
+<div class="flex items-center gap-1">
+<span class="text-on-surface-variant font-bold text-sm italic">XP Multiplier Active</span>
+<span class="material-symbols-outlined text-tertiary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+</div>
+<!-- Custom Progress Bar (The Liquid Vessel) -->
+<div class="relative h-6 w-full bg-surface-container rounded-full overflow-hidden shadow-inner">
+<div class="absolute inset-y-0 left-0 bg-gradient-to-r from-primary to-primary-fixed-dim w-3/4 rounded-full shadow-[0_0_15px_rgba(43,102,74,0.3)]"></div>
+<div class="absolute inset-0 flex items-center justify-center">
+<span class="text-[10px] font-black text-white mix-blend-overlay uppercase tracking-[0.2em]">Sprinting...</span>
+</div>
+</div>
+</div>
+<!-- Question Section -->
+<div class="space-y-6">
+<div class="relative bg-surface-container-lowest p-8 rounded-xl shadow-[0_32px_48px_rgba(43,102,74,0.06)] border border-outline-variant/10">
+<!-- Floating Sticker Badge -->
+<div class="absolute -top-4 -right-2 rotate-6 bg-secondary-container text-on-secondary-container px-4 py-2 rounded-lg font-extrabold text-xs shadow-lg transform hover:scale-110 transition-transform">
+                    CHALLENGE
+                </div>
+<h2 class="text-2xl md:text-3xl font-extrabold text-on-surface leading-tight tracking-tight">
+                    Which recovery technique primarily focuses on improving neuroplasticity through high-intensity intervals?
+                </h2>
+</div>
+<!-- Multiple Choice Grid -->
+<div class="grid grid-cols-1 gap-4">
+<!-- Option 1: Unselected -->
+<button class="group flex items-center justify-between p-6 bg-surface-container-low hover:bg-surface-container-lowest rounded-lg text-left transition-all duration-300 border-2 border-transparent hover:border-primary-container hover:shadow-[0_12px_24px_rgba(0,0,0,0.04)] squishy-physics">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container-highest rounded-full group-hover:bg-primary-container transition-colors">
+<span class="font-black text-on-surface-variant group-hover:text-primary">A</span>
+</div>
+<span class="font-bold text-on-surface text-lg">Active Recovery Walks</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant opacity-0 group-hover:opacity-100 transition-opacity">radio_button_unchecked</span>
+</button>
+<!-- Option 2: Selected State Simulation -->
+<button class="group flex items-center justify-between p-6 bg-primary-container/20 rounded-lg text-left transition-all duration-300 border-2 border-primary shadow-[0_16px_32px_rgba(43,102,74,0.08)] squishy-physics">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 flex items-center justify-center bg-primary text-on-primary rounded-full">
+<span class="font-black">B</span>
+</div>
+<span class="font-extrabold text-on-primary-container text-lg">Cognitive Sprints</span>
+</div>
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</button>
+<!-- Option 3 -->
+<button class="group flex items-center justify-between p-6 bg-surface-container-low hover:bg-surface-container-lowest rounded-lg text-left transition-all duration-300 border-2 border-transparent hover:border-primary-container hover:shadow-[0_12px_24px_rgba(0,0,0,0.04)] squishy-physics">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container-highest rounded-full group-hover:bg-primary-container transition-colors">
+<span class="font-black text-on-surface-variant group-hover:text-primary">C</span>
+</div>
+<span class="font-bold text-on-surface text-lg">Z-Wave Meditation</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant opacity-0 group-hover:opacity-100 transition-opacity">radio_button_unchecked</span>
+</button>
+<!-- Option 4 -->
+<button class="group flex items-center justify-between p-6 bg-surface-container-low hover:bg-surface-container-lowest rounded-lg text-left transition-all duration-300 border-2 border-transparent hover:border-primary-container hover:shadow-[0_12px_24px_rgba(0,0,0,0.04)] squishy-physics">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 flex items-center justify-center bg-surface-container-highest rounded-full group-hover:bg-primary-container transition-colors">
+<span class="font-black text-on-surface-variant group-hover:text-primary">D</span>
+</div>
+<span class="font-bold text-on-surface text-lg">Isometric Drills</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant opacity-0 group-hover:opacity-100 transition-opacity">radio_button_unchecked</span>
+</button>
+</div>
+</div>
+<!-- Tip/Context Section (Glassmorphism) -->
+<div class="bg-white/40 backdrop-blur-md p-6 rounded-lg border border-white/60 flex gap-4">
+<span class="material-symbols-outlined text-emerald-600 shrink-0" style="font-variation-settings: 'FILL' 1;">lightbulb</span>
+<p class="text-sm text-on-surface-variant italic font-medium">
+                Pro-tip: Focus on the "high-intensity" keyword in the prompt. It's often associated with neuro-muscular adaptation.
+            </p>
+</div>
+</main>
+<!-- Fixed Bottom Actions -->
+<div class="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-surface via-surface/90 to-transparent z-40">
+<div class="max-w-2xl mx-auto">
+<button class="w-full py-6 rounded-xl bg-primary text-on-primary font-black text-xl tracking-wide shadow-[0_12px_32px_rgba(43,102,74,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300 border-b-4 border-primary-dim flex items-center justify-center gap-3">
+<span>Submit</span>
+<span class="material-symbols-outlined">rocket_launch</span>
+</button>
+<!-- Post-Submit state hidden by default, would replace button above -->
+<button class="hidden w-full py-6 rounded-xl bg-tertiary text-on-tertiary font-black text-xl tracking-wide shadow-[0_12px_32px_rgba(135,78,0,0.3)] hover:scale-[1.02] active:scale-95 transition-all duration-300 border-b-4 border-tertiary-dim flex items-center justify-center gap-3">
+<span>Complete Sprint (+20 XP)</span>
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">military_tech</span>
+</button>
+</div>
+</div>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-t-[3rem] z-50 shadow-[0_-8px_40px_rgba(0,0,0,0.08)] md:hidden">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="category">category</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Segments</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 rounded-[2rem] px-5 py-2 scale-105 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="waves" style="font-variation-settings: 'FILL' 1;">waves</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Reset</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="trophy">trophy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Board</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" data-icon="smart_toy">smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider mt-1">Coach</span>
+</a>
+</nav>
+</body></html>

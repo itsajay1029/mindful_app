@@ -37,6 +37,8 @@ dependencies:
   cloud_firestore: ^5.6.0
   google_sign_in: ^6.3.0
 
+  confetti: ^0.8.0
+
   # Local notifications (Phase 2 reminder)
   flutter_local_notifications: ^18.0.1
   timezone: ^0.10.1
@@ -47,6 +49,7 @@ dependencies:
   # Video playback
   video_player: ^2.10.0
   cupertino_icons: ^1.0.8
+  google_fonts: ^8.0.2
 
 dev_dependencies:
   flutter_test:
@@ -75,6 +78,7 @@ flutter:
 
   assets:
     - assets/branding/logo.png
+    - screens/stitch/
 
 flutter_launcher_icons:
   android: true

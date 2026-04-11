@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Learning Hub | AboveTheGrind</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#443100",
+                    "surface-variant": "#dadde2",
+                    "on-error-container": "#570008",
+                    "surface-container-highest": "#dadde2",
+                    "primary-container": "#baf9d4",
+                    "primary-fixed-dim": "#acebc7",
+                    "error-container": "#fb5151",
+                    "on-surface": "#2c2f32",
+                    "on-surface-variant": "#595c5f",
+                    "tertiary-dim": "#764400",
+                    "surface": "#f5f6fa",
+                    "secondary-container": "#fccb52",
+                    "on-secondary-container": "#5b4400",
+                    "secondary-dim": "#654c00",
+                    "secondary-fixed": "#fccb52",
+                    "inverse-primary": "#bfffda",
+                    "on-error": "#ffefee",
+                    "secondary-fixed-dim": "#edbd46",
+                    "primary": "#2b664a",
+                    "outline": "#75777a",
+                    "error": "#b31b25",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#9b9da1",
+                    "surface-container": "#e6e8ed",
+                    "surface-container-high": "#e0e2e8",
+                    "surface-dim": "#d1d5da",
+                    "surface-tint": "#2b664a",
+                    "surface-bright": "#f5f6fa",
+                    "tertiary-container": "#ff9800",
+                    "on-primary-container": "#256145",
+                    "on-tertiary-container": "#4a2800",
+                    "on-tertiary-fixed": "#271300",
+                    "on-tertiary-fixed-variant": "#563000",
+                    "primary-dim": "#1d5a3f",
+                    "on-primary": "#c9ffde",
+                    "inverse-surface": "#0c0e11",
+                    "primary-fixed": "#baf9d4",
+                    "on-secondary": "#fff1da",
+                    "on-primary-fixed-variant": "#306c4f",
+                    "tertiary": "#874e00",
+                    "on-background": "#2c2f32",
+                    "error-dim": "#9f0519",
+                    "outline-variant": "#abadb1",
+                    "tertiary-fixed": "#ff9800",
+                    "secondary": "#745700",
+                    "background": "#f5f6fa",
+                    "on-secondary-fixed-variant": "#674d00",
+                    "surface-container-low": "#eff1f5",
+                    "on-primary-fixed": "#0d4e34",
+                    "tertiary-fixed-dim": "#ec8c00",
+                    "on-tertiary": "#fff0e5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            line-height: 1;
+            text-transform: none;
+            letter-spacing: normal;
+            word-wrap: normal;
+            white-space: nowrap;
+            direction: ltr;
+        }
+        .squishy-physics {
+            transition-timing-function: cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .glass-effect {
+            backdrop-filter: blur(24px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface antialiased min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl docked full-width top-0 sticky z-50 shadow-[0_8px_32px_rgba(43,102,74,0.1)] flex items-center justify-between px-6 py-4 w-full">
+<div class="flex items-center gap-4">
+<button class="hover:scale-110 transition-transform active:scale-95 transition-all duration-200 ease-out text-emerald-800 dark:text-emerald-400">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-['Plus_Jakarta_Sans'] font-extrabold tracking-tight text-lg text-emerald-900 dark:text-emerald-100 italic">Learning Hub</h1>
+</div>
+<div class="flex items-center gap-3">
+<button class="hover:scale-110 transition-transform active:scale-95 text-emerald-700">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container">
+<img class="w-full h-full object-cover" data-alt="professional headshot of a smiling young man with dark hair in a bright modern studio setting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-MZ3ICID56ZUYsgMTRLca0W7KPbQ6cP441tBXqcMgA2Bz3BGWhDGUWJ90yJR_1vmXvyTUwWaOJwTaCEXd95xLnJrEOtvv_yv2bLaXzkXT4IPis1YalQynFukZj-vl_ZyoJ8Bj2ANAodm3LmRT1hWVeaGK-1-jIWKxtGYRG6fia_-K-MmjCKjNFaiwvHqrxL4kP8W2dthiZMZwXpl20T2S0fe8lkTFYFqsQmLB3AbrvYTfl1kBmuhXubeN8bm7plweOcZ7qk_XM1fH"/>
+</div>
+</div>
+</header>
+<main class="max-w-md mx-auto px-6 pt-8 space-y-8">
+<!-- Search Section -->
+<section class="space-y-4">
+<div class="relative group">
+<div class="absolute inset-y-0 left-5 flex items-center pointer-events-none text-outline">
+<span class="material-symbols-outlined text-emerald-700">search</span>
+</div>
+<input class="w-full h-16 pl-14 pr-6 rounded-xl bg-surface-container-lowest border-2 border-transparent focus:border-primary focus:ring-0 shadow-[0_12px_24px_rgba(0,0,0,0.04)] text-body-lg placeholder:text-on-surface-variant/50 transition-all duration-300" placeholder="Search for courses, skills..." type="text"/>
+<div class="absolute inset-y-0 right-5 flex items-center">
+<button class="p-2 rounded-lg bg-primary-container/30 text-on-primary-container">
+<span class="material-symbols-outlined">tune</span>
+</button>
+</div>
+</div>
+<!-- Categories Chips -->
+<div class="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+<button class="whitespace-nowrap px-6 py-3 rounded-full bg-primary text-on-primary font-bold shadow-lg shadow-primary/20 hover:translate-y-[-2px] transition-all">All Courses</button>
+<button class="whitespace-nowrap px-6 py-3 rounded-full bg-surface-container-lowest text-on-surface-variant font-semibold hover:bg-white transition-all">Mindset</button>
+<button class="whitespace-nowrap px-6 py-3 rounded-full bg-surface-container-lowest text-on-surface-variant font-semibold hover:bg-white transition-all">Business</button>
+<button class="whitespace-nowrap px-6 py-3 rounded-full bg-surface-container-lowest text-on-surface-variant font-semibold hover:bg-white transition-all">Design</button>
+</div>
+</section>
+<!-- Course Cards Grid -->
+<section class="space-y-6 pb-12">
+<!-- Course Card 1: Enrolled -->
+<article class="bg-surface-container-lowest rounded-lg p-5 shadow-[0_16px_40px_rgba(0,0,0,0.05)] space-y-4 relative overflow-hidden group hover:scale-[1.02] transition-all duration-300 squishy-physics">
+<div class="h-48 w-full rounded-md overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="vibrant neon lights in a modern creative workshop with digital screens and professional equipment" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgMtdSQXacZvhmkEny-O-DORa9cuhfxxoO_FNs8f_P9NVNu8qgCpRwz06Ve2QZHZ4N5BYU_gryyFhBI4W6DCxmhLnheR6xdjE6QdDDMNTSihHTp1d5jULwtEbC5ivsmyuHuYWWeR3YdMSL0yaYdE9qJAUY9DJUvHPYKu_hY7iLBqJYPZko8lzycxcUDaaRzEI0GM7o3wCDQ5H3f9ij4ZoTgPWK72fZG6-3oQALJD3Y44IQRfwClT1_p7AfRTrSPf0CrZ2di1lA60YO"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Mindset</span>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-bold text-xl leading-tight text-on-surface">The Stoic Leader: Mastery Under Pressure</h3>
+<span class="flex items-center gap-1 bg-surface-container text-on-surface-variant px-3 py-1 rounded-full text-[10px] font-bold">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 12h
+                        </span>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-sm font-bold text-on-primary-container">
+<span>Progress</span>
+<span>65%</span>
+</div>
+<div class="h-2 w-full bg-primary-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-[65%] rounded-full"></div>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-bold text-lg shadow-[0_4px_0_rgba(13,78,52,1)] hover:translate-y-[2px] hover:shadow-[0_2px_0_rgba(13,78,52,1)] active:translate-y-[4px] active:shadow-none transition-all duration-100 flex items-center justify-center gap-2">
+                        Continue <span class="material-symbols-outlined">play_circle</span>
+</button>
+</div>
+</article>
+<!-- Course Card 2: Enroll (Tonal) -->
+<article class="bg-surface-container-lowest rounded-lg p-5 shadow-[0_16px_40px_rgba(0,0,0,0.05)] space-y-4 relative overflow-hidden group hover:scale-[1.02] transition-all duration-300 squishy-physics">
+<div class="h-48 w-full rounded-md overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="team of young professionals collaborating around a large wooden table in a bright minimalist office space" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4mG6FV-s8pI4Ol80AqSIu_lpIcMptnWUFxPZXPYnE9DcxqfZZzRmSsgboMZCpaTRzflmdRCuveoeatkU82IxXZacae1CcKHZQXU8pBEduPeooIBTYXeLiAxnzgjvTI-WLKKdAOt2ox1Yv5y3wvucL9xSNfxtkrTxGJDc1FkkZyCr51mk5ohiFExDEv-XbkUDWVCQX28NmXOUTa-L3VFbCFdP45vhMHVi2JExEbWh0QW8VkO4vfCo3c-1fLud_HL_HwIZ-MvKavNxE"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-secondary-container text-on-secondary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Business</span>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-bold text-xl leading-tight text-on-surface">Digital Leverage &amp; Scalable Systems</h3>
+<span class="flex items-center gap-1 bg-surface-container text-on-surface-variant px-3 py-1 rounded-full text-[10px] font-bold">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 8.5h
+                        </span>
+</div>
+<p class="text-on-surface-variant text-sm line-clamp-2">Learn how to build systems that work while you sleep. A deep dive into automation and scale.</p>
+<button class="w-full bg-primary-container text-on-primary-container py-4 rounded-xl font-bold text-lg hover:bg-primary-fixed-dim transition-colors flex items-center justify-center gap-2">
+                        Enroll <span class="material-symbols-outlined">add_circle</span>
+</button>
+</div>
+</article>
+<!-- Course Card 3: New/Hot -->
+<article class="bg-surface-container-lowest rounded-lg p-5 shadow-[0_16px_40px_rgba(0,0,0,0.05)] space-y-4 relative overflow-hidden group hover:scale-[1.02] transition-all duration-300 squishy-physics">
+<!-- Achievement Sticker -->
+<div class="absolute -right-2 -top-2 z-10 rotate-12 bg-tertiary text-on-tertiary px-4 py-2 rounded-lg font-bold text-[10px] uppercase shadow-lg">New Release</div>
+<div class="h-48 w-full rounded-md overflow-hidden relative">
+<img class="w-full h-full object-cover" data-alt="macro close-up of colorful abstract paper art with sharp angles and clean shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC6lQ6q4rBSfn_vKyTzMH5d7kTwVPrUCFkx6ufXnqEIPJIUZJcALb7a3VBFc1y--Tsp09enu787M7eG9k0tQIuC6fBdtEWlIymJuJspzBOD9AKyakfZclVD3oj5imlbX4_AAl4zVlTlLxZPdqFX1ztXLDy-whP2y55Jhu6IyeQT7oKzWAwVZ9MgaB2qAfcmjblWkPh7BRtHF2ZqBff5fV06KV3IlM3Ed7MGiv6xoNlnJpQi6vOgRtzDCqUeUNz5xBfEYfTCkxIHCHzA"/>
+<div class="absolute top-4 left-4 flex gap-2">
+<span class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Design</span>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-start">
+<h3 class="font-headline font-bold text-xl leading-tight text-on-surface">Psychology of Interface Persuasion</h3>
+<span class="flex items-center gap-1 bg-surface-container text-on-surface-variant px-3 py-1 rounded-full text-[10px] font-bold">
+<span class="material-symbols-outlined text-[14px]">schedule</span> 5h
+                        </span>
+</div>
+<button class="w-full bg-primary-container text-on-primary-container py-4 rounded-xl font-bold text-lg hover:bg-primary-fixed-dim transition-colors flex items-center justify-center gap-2">
+                        Enroll <span class="material-symbols-outlined">add_circle</span>
+</button>
+</div>
+</article>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-2xl rounded-t-[3rem] z-50 shadow-[0_-8px_40px_rgba(0,0,0,0.08)]">
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center bg-emerald-100 dark:bg-emerald-900/40 text-emerald-800 dark:text-emerald-200 rounded-[2rem] px-5 py-2 scale-105 active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">category</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider">Segments</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined">waves</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider">Reset</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined">trophy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider">Board</span>
+</a>
+<a class="flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 px-4 py-2 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-full active:translate-y-1 transition-all duration-300 squishy-physics" href="#">
+<span class="material-symbols-outlined">smart_toy</span>
+<span class="font-['Plus_Jakarta_Sans'] font-bold text-[10px] uppercase tracking-wider">Coach</span>
+</a>
+</nav>
+</body></html>

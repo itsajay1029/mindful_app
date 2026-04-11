@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Login | AboveTheGrind</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-secondary-fixed": "#443100",
+                    "surface-variant": "#dadde2",
+                    "on-error-container": "#570008",
+                    "surface-container-highest": "#dadde2",
+                    "primary-container": "#baf9d4",
+                    "primary-fixed-dim": "#acebc7",
+                    "error-container": "#fb5151",
+                    "on-surface": "#2c2f32",
+                    "on-surface-variant": "#595c5f",
+                    "tertiary-dim": "#764400",
+                    "surface": "#f5f6fa",
+                    "secondary-container": "#fccb52",
+                    "on-secondary-container": "#5b4400",
+                    "secondary-dim": "#654c00",
+                    "secondary-fixed": "#fccb52",
+                    "inverse-primary": "#bfffda",
+                    "on-error": "#ffefee",
+                    "secondary-fixed-dim": "#edbd46",
+                    "primary": "#2b664a",
+                    "outline": "#75777a",
+                    "error": "#b31b25",
+                    "surface-container-lowest": "#ffffff",
+                    "inverse-on-surface": "#9b9da1",
+                    "surface-container": "#e6e8ed",
+                    "surface-container-high": "#e0e2e8",
+                    "surface-dim": "#d1d5da",
+                    "surface-tint": "#2b664a",
+                    "surface-bright": "#f5f6fa",
+                    "tertiary-container": "#ff9800",
+                    "on-primary-container": "#256145",
+                    "on-tertiary-container": "#4a2800",
+                    "on-tertiary-fixed": "#271300",
+                    "on-tertiary-fixed-variant": "#563000",
+                    "primary-dim": "#1d5a3f",
+                    "on-primary": "#c9ffde",
+                    "inverse-surface": "#0c0e11",
+                    "primary-fixed": "#baf9d4",
+                    "on-secondary": "#fff1da",
+                    "on-primary-fixed-variant": "#306c4f",
+                    "tertiary": "#874e00",
+                    "on-background": "#2c2f32",
+                    "error-dim": "#9f0519",
+                    "outline-variant": "#abadb1",
+                    "tertiary-fixed": "#ff9800",
+                    "secondary": "#745700",
+                    "background": "#f5f6fa",
+                    "on-secondary-fixed-variant": "#674d00",
+                    "surface-container-low": "#eff1f5",
+                    "on-primary-fixed": "#0d4e34",
+                    "tertiary-fixed-dim": "#ec8c00",
+                    "on-tertiary": "#fff0e5"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Plus Jakarta Sans"],
+                    "body": ["Plus Jakarta Sans"],
+                    "label": ["Plus Jakarta Sans"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .squishy-physics:active {
+            transform: scale(0.96) translateY(2px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-header {
+            background: linear-gradient(135deg, #2b664a 0%, #baf9d4 100%);
+            clip-path: ellipse(150% 100% at 50% 0%);
+        }
+        .three-d-button {
+            box-shadow: 0 4px 0px 0px #1d5a3f;
+        }
+        .three-d-button:active {
+            box-shadow: 0 0px 0px 0px #1d5a3f;
+            transform: translateY(4px);
+        }
+        .three-d-secondary {
+            box-shadow: 0 4px 0px 0px #e6e8ed;
+        }
+        .three-d-secondary:active {
+            box-shadow: 0 0px 0px 0px #e6e8ed;
+            transform: translateY(4px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background font-body text-on-surface min-h-screen selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
+<!-- Playful Curved Top Area -->
+<div class="glass-header w-full h-[309px] flex flex-col items-center justify-center relative overflow-hidden">
+<div class="absolute inset-0 opacity-10">
+<div class="absolute top-10 left-10 w-24 h-24 bg-white rounded-full blur-3xl"></div>
+<div class="absolute bottom-10 right-10 w-32 h-32 bg-secondary-fixed rounded-full blur-3xl"></div>
+</div>
+<!-- Logo Placeholder from TopAppBar style -->
+<div class="flex items-center gap-2 mb-2 z-10">
+<div class="w-16 h-16 bg-white rounded-[1.5rem] flex items-center justify-center shadow-xl rotate-[-3deg]">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">sprint</span>
+</div>
+</div>
+<h1 class="text-white font-headline font-extrabold italic text-2xl tracking-tight z-10">AboveTheGrind</h1>
+</div>
+<!-- Main Content Canvas -->
+<main class="relative -mt-20 px-6 pb-24 flex flex-col items-center max-w-md mx-auto w-full">
+<!-- Centered Card -->
+<div class="w-full bg-surface-container-lowest rounded-xl p-8 shadow-[0_32px_64px_rgba(43,102,74,0.1)] flex flex-col gap-8 border border-white/50">
+<div class="text-center space-y-2">
+<h2 class="text-primary font-headline font-extrabold text-3xl tracking-tight">Welcome Back</h2>
+<p class="text-on-surface-variant font-medium">Ready for another session?</p>
+</div>
+<!-- Google Login (Primary 3D Button style) -->
+<button class="three-d-secondary bg-surface-container-low text-on-surface font-bold text-lg py-4 px-6 rounded-lg flex items-center justify-center gap-4 transition-all hover:bg-surface-container transition-colors border border-outline-variant/10">
+<img alt="" class="w-6 h-6" data-alt="Google colorful letter G logo centered on white background with sharp details" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZoHsH2VfS8lFcnj03bnDwmr5fVDRxbtrNsLQzXKxhpRmOe-csHO_iy4G-vnUeW1Vq914kmbSfokDRs4DegE47NC94l0j0lWaOrKnlvYdCDoxH0gLM19wu65-6bZeBHsMJHMgrhipi-G5AGttkFlAd3sP-ANVuz5AgVP9KuRt044xy5thHWXnmZSx6a4cOJXfkVWv-BDLeFOwRtEt0S8wNugn23wov8-GjufSg43xd1I66tB1gcYR7MvOCGll6jrtIM58rxrRAkFZj"/>
+                Continue with Google
+            </button>
+<!-- Divider -->
+<div class="flex items-center gap-4">
+<div class="h-[2px] flex-1 bg-surface-container"></div>
+<span class="text-outline text-xs font-bold uppercase tracking-widest">or use email</span>
+<div class="h-[2px] flex-1 bg-surface-container"></div>
+</div>
+<!-- Form Area -->
+<form class="space-y-6">
+<div class="space-y-4">
+<div class="group">
+<label class="block text-on-surface-variant text-xs font-bold uppercase tracking-widest mb-2 ml-1">Email address</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest rounded-lg py-4 px-5 outline-none transition-all font-medium" placeholder="you@example.com" type="email"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant">mail</span>
+</div>
+</div>
+<div class="group">
+<div class="flex justify-between items-center mb-2">
+<label class="text-on-surface-variant text-xs font-bold uppercase tracking-widest ml-1">Password</label>
+<a class="text-primary font-bold text-xs uppercase tracking-widest hover:underline" href="#">Forgot?</a>
+</div>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-2 border-transparent focus:border-primary focus:bg-surface-container-lowest rounded-lg py-4 px-5 outline-none transition-all font-medium" placeholder="••••••••" type="password"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline-variant">lock</span>
+</div>
+</div>
+</div>
+<!-- Action Button -->
+<button class="three-d-button w-full bg-primary text-on-primary font-extrabold text-xl py-4 rounded-lg flex items-center justify-center gap-2 hover:bg-primary-dim transition-colors group" type="submit">
+                    Log in
+                    <span class="material-symbols-outlined group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</form>
+<div class="text-center pt-2">
+<p class="text-on-surface-variant font-medium">
+                    New to AboveTheGrind? 
+                    <a class="text-primary font-extrabold ml-1 hover:underline decoration-2 underline-offset-4" href="#">Sign up</a>
+</p>
+</div>
+</div>
+<!-- Decorative Illustration Element (Asymmetric) -->
+<div class="mt-12 flex items-center gap-6 bg-secondary-container/20 p-6 rounded-lg border border-secondary-container/10">
+<div class="w-12 h-12 bg-secondary-fixed rounded-full flex items-center justify-center shadow-lg rotate-[8deg]">
+<span class="material-symbols-outlined text-on-secondary-fixed text-2xl" style="font-variation-settings: 'FILL' 1;">trophy</span>
+</div>
+<div>
+<p class="text-on-secondary-container font-bold text-sm italic">"The only workout you regret is the one that didn't happen."</p>
+</div>
+</div>
+</main>
+<!-- Suppressed BottomNavBar due to focus task (Transactional page rule) -->
+<!-- But we keep the overall spacing for consistent feel -->
+<!-- Floating Gamification Sticker -->
+<div class="fixed bottom-10 right-6 z-10 pointer-events-none">
+<div class="w-20 h-20 bg-tertiary-container rounded-full flex items-center justify-center shadow-[0_8px_32px_rgba(255,152,0,0.3)] rotate-12 border-4 border-white">
+<span class="material-symbols-outlined text-white text-4xl" style="font-variation-settings: 'FILL' 1;">local_fire_department</span>
+</div>
+</div>
+</body></html>
