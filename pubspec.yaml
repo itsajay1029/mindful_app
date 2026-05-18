@@ -31,6 +31,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Open external links (e.g. website)
+  url_launcher: ^6.3.2
+
   # Firebase
   firebase_core: ^3.15.0
   firebase_auth: ^5.5.0
@@ -78,13 +81,15 @@ flutter:
 
   assets:
     - assets/branding/logo.png
+    - assets/branding/app-final-logo.png
     - screens/stitch/
 
 flutter_launcher_icons:
   android: true
-  image_path: assets/branding/logo.png
+  ios: true
+  image_path: assets/branding/app-final-logo.png
   adaptive_icon_background: "#FFFFFF"
-  adaptive_icon_foreground: assets/branding/logo.png
+  adaptive_icon_foreground: assets/branding/app-final-logo.png
 
   # To add assets to your application, add an assets section, like this:
   # assets:

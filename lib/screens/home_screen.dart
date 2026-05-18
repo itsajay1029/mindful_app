@@ -1,6 +1,7 @@
 import 'package:confetti/confetti.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
@@ -139,7 +140,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       StreamBuilder(
                         stream: FirestoreService().streamUserDoc(user.uid),
                         builder: (context, snap) {
-                          final data = (snap.data?.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
+                          final data = snap.data?.data() ?? <String, dynamic>{};
                           final xp = (data['xp'] as num?)?.toInt() ?? 0;
                           return EoAvatarRing(
                             photoUrl: user.photoURL,
@@ -170,7 +171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final data = (snap.data?.data() as Map<String, dynamic>?) ?? <String, dynamic>{};
+                final data = snap.data?.data() ?? <String, dynamic>{};
                 final name = _firstName(data);
                 final xp = (data['xp'] as num?)?.toInt() ?? 0;
                 final streak = (data['streakCurrent'] as num?)?.toInt() ?? 0;
@@ -238,6 +239,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
 
                     const SizedBox(height: 16),
+
+                    // Knowledge Quests (new home)
+                    const _KnowledgeQuestsSection(),
 
                     // Daily Sprint card
                     EoCard(
@@ -481,6 +485,227 @@ class _HeroPill extends StatelessWidget {
                 ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _KnowledgeQuestsSection extends StatelessWidget {
+  const _KnowledgeQuestsSection();
+
+  static final Uri _missionUrl = Uri.parse('https://www.abovethegrind.org');
+
+  Future<void> _openMission(BuildContext context) async {
+    final ok = await launchUrl(_missionUrl, mode: LaunchMode.externalApplication);
+    if (!ok && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open www.abovethegrind.org')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    Widget item({
+      required IconData icon,
+      required Color iconColor,
+      required String title,
+      required String subtitle,
+      Widget? trailing,
+    }) {
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: EoColors.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(EoRadii.lg),
+          border: Border.all(color: Colors.transparent, width: 2),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Icon(icon, color: iconColor, size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: EoColors.onSurface,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: EoColors.onSurfaceVariant,
+                          height: 1.35,
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  if (trailing != null) ...[
+                    const SizedBox(height: 10),
+                    trailing,
+                  ]
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text('Knowledge Quests', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                'New Discovery'.toUpperCase(),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Stack(
+          children: [
+            // soft orb glow (matches Tailwind: blur-3xl circle)
+            Positioned(
+              right: -48,
+              top: -48,
+              child: Container(
+                height: 128,
+                width: 128,
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer.withValues(alpha: 0.20),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+            EoCard(
+              padding: const EdgeInsets.all(20),
+              border: Border.all(color: cs.primaryContainer.withValues(alpha: 0.35)),
+              shadowColor: cs.primary.withValues(alpha: 0.08),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: cs.primaryContainer,
+                          borderRadius: BorderRadius.circular(EoRadii.lg),
+                        ),
+                        child: Icon(Icons.auto_awesome_rounded, color: cs.primary),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'What is AboveTheGrind?',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                color: EoColors.onSurface,
+                              ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  item(
+                    icon: Icons.center_focus_strong_rounded,
+                    iconColor: cs.primary,
+                    title: 'Redefining Leadership',
+                    subtitle: 'Helping leaders achieve clarity, balance, and results in a high-pressure world.',
+                  ),
+                  const SizedBox(height: 12),
+                  item(
+                    icon: Icons.psychology_rounded,
+                    iconColor: cs.secondary,
+                    title: 'Intentional Growth',
+                    subtitle: 'Coaching • Mindfulness • Consulting • Financial Advisory',
+                    trailing: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: const [
+                        _MiniTag('Coaching'),
+                        _MiniTag('Mindfulness'),
+                        _MiniTag('Consulting'),
+                        _MiniTag('Financial Advisory'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  item(
+                    icon: Icons.groups_rounded,
+                    iconColor: cs.tertiary,
+                    title: 'How to Lead',
+                    subtitle: 'Build stronger teams, create effective systems, and inspire purposeful leadership.',
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: EoTactileButton.tonal(
+                      label: 'Explore the Mission',
+                      icon: const Icon(Icons.open_in_new_rounded),
+                      toneColor: EoColors.surfaceContainerHigh,
+                      onPressed: () => _openMission(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
+class _MiniTag extends StatelessWidget {
+  const _MiniTag(this.label);
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: EoColors.onSurfaceVariant,
+              fontWeight: FontWeight.w900,
+              fontSize: 9,
+            ),
       ),
     );
   }
