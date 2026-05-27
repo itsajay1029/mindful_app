@@ -5,6 +5,7 @@ import 'home_screen.dart';
 import 'leaderboard_screen.dart';
 import 'reset_studio_screen.dart';
 import 'segments_screen.dart';
+import '../services/analytics_service.dart';
 import '../services/local_notification_service.dart';
 import '../ui/emerald_orbit/widgets/eo_bottom_nav.dart';
 
@@ -43,7 +44,20 @@ class _AppShellState extends State<AppShell> {
       body: _tabs[_index],
       bottomNavigationBar: EoBottomNav(
         index: _index,
-        onSelected: (i) => setState(() => _index = i),
+        onSelected: (i) {
+          setState(() => _index = i);
+          AnalyticsService.instance.track('nav_tab_selected', props: {
+            'index': i,
+            'label': switch (i) {
+              0 => 'home',
+              1 => 'segments',
+              2 => 'reset',
+              3 => 'leaderboard',
+              4 => 'coach',
+              _ => 'unknown',
+            },
+          });
+        },
       ),
     );
   }

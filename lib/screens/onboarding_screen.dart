@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../services/analytics_service.dart';
 import '../services/firestore_service.dart';
 import 'auth_gate.dart';
 
@@ -135,6 +136,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     if (_step < 2) {
       setState(() {
         _step += 1;
+      });
+
+      AnalyticsService.instance.track('onboarding_step_completed', props: {
+        'step': _step, // next step after increment
       });
     } else {
       _finish();

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/daily_riddle.dart';
+import '../services/analytics_service.dart';
+import '../services/firestore_service.dart';
 import '../ui/emerald_orbit/tokens.dart';
 import '../ui/emerald_orbit/widgets/eo_tactile_button.dart';
 import 'victory_celebration_screen.dart';
@@ -18,14 +23,20 @@ class _RiddleQuestScreenState extends State<RiddleQuestScreen> {
   int? _selected;
   bool _submitted = false;
 
-  static const _riddle =
-      'I have keys, but no locks. I have a space, but no room. You can allow me in, but you can never leave. What am I?';
-  static const _options = <String>['A Prison', 'A Keyboard', 'A Map', 'An Atlas'];
-  static const _correct = 1;
+  bool _busy = false;
+
+  String _dateKey(DateTime now) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${now.year}-${two(now.month)}-${two(now.day)}';
+  }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
+    final user = FirebaseAuth.instance.currentUser;
+
+    final dateKey = _dateKey(DateTime.now());
 
     return Scaffold(
       backgroundColor: EoColors.surface,
@@ -86,18 +97,25 @@ class _RiddleQuestScreenState extends State<RiddleQuestScreen> {
                         color: EoColors.tertiaryContainer.withValues(alpha: 0.20),
                         borderRadius: BorderRadius.circular(EoRadii.full),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(Icons.local_fire_department, color: cs.tertiary, size: 18),
-                          const SizedBox(width: 6),
-                          Text(
-                            '12',
-                            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                  color: EoColors.onTertiaryContainer,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                          ),
-                        ],
+                      child: StreamBuilder(
+                        stream: user == null ? null : FirestoreService().streamUserDoc(user.uid),
+                        builder: (context, snap) {
+                          final data = (snap.data as dynamic)?.data() as Map<String, dynamic>?;
+                          final streak = (data?['streakCurrent'] as num?)?.toInt() ?? 0;
+                          return Row(
+                            children: [
+                              Icon(Icons.local_fire_department, color: cs.tertiary, size: 18),
+                              const SizedBox(width: 6),
+                              Text(
+                                '$streak',
+                                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                      color: EoColors.onTertiaryContainer,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
                     ),
                     const SizedBox(width: 14),
@@ -109,11 +127,34 @@ class _RiddleQuestScreenState extends State<RiddleQuestScreen> {
           ),
         ),
       ),
-      body: Stack(
-        children: [
-          ListView(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 160),
+      body: StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+        stream: FirestoreService().dailyRiddleDoc(dateKey).snapshots(),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final doc = snap.data;
+          if (doc == null || doc.exists == false) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(
+                  'No Daily Riddle configured for today ($dateKey).',
+                  textAlign: TextAlign.center,
+                ),
+              ),
+            );
+          }
+
+          final riddle = DailyRiddle.fromDoc(doc);
+          final options = riddle.options;
+
+          return Stack(
             children: [
+              ListView(
+                padding: const EdgeInsets.fromLTRB(24, 24, 24, 160),
+                children: [
               // Mascot placeholder (use stitch PNG for now)
               Center(
                 child: SizedBox(
@@ -213,7 +254,7 @@ class _RiddleQuestScreenState extends State<RiddleQuestScreen> {
                     Text('🤔', style: Theme.of(context).textTheme.displaySmall),
                     const SizedBox(height: 12),
                     Text(
-                      _riddle,
+                      riddle.prompt,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
                             fontWeight: FontWeight.w900,
                             height: 1.20,
@@ -255,9 +296,9 @@ class _RiddleQuestScreenState extends State<RiddleQuestScreen> {
                 ),
               ),
               const SizedBox(height: 18),
-              ...List.generate(_options.length, (i) {
+              ...List.generate(options.length, (i) {
                 final selected = _selected == i;
-                final isCorrect = _submitted && i == _correct;
+                final isCorrect = _submitted && i == riddle.correctIndex;
                 final base = EoColors.surfaceContainerLow;
                 final bg = selected || isCorrect ? EoColors.primaryContainer : base;
                 final bottomBorderColor = selected || isCorrect ? EoColors.onPrimaryFixedVariant : EoColors.surfaceContainerHighest;
@@ -296,7 +337,7 @@ class _RiddleQuestScreenState extends State<RiddleQuestScreen> {
                           const SizedBox(width: 14),
                           Expanded(
                             child: Text(
-                              _options[i],
+                              options[i],
                               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                                     fontWeight: selected || isCorrect ? FontWeight.w900 : FontWeight.w800,
                                     color: selected || isCorrect ? EoColors.onPrimaryContainer : EoColors.onSurface,
@@ -329,6 +370,10 @@ class _RiddleQuestScreenState extends State<RiddleQuestScreen> {
               child: EoTactileButton.tonal(
                 label: _submitted ? 'Continue' : 'Check answer',
                 onPressed: () async {
+                  if (_busy) return;
+
+                  final navigator = Navigator.of(context);
+
                   if (_selected == null) {
                     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Pick an option')));
                     return;
@@ -338,21 +383,59 @@ class _RiddleQuestScreenState extends State<RiddleQuestScreen> {
                     return;
                   }
 
-                  // Show celebration then go back.
-                  await Navigator.of(context).push(
-                    MaterialPageRoute(
-                      fullscreenDialog: true,
-                      builder: (_) => const VictoryCelebrationScreen(
-                        title: 'Mastermind!',
-                        subtitle: 'You decoded the riddle with ease.',
-                        xpRewardLabel: '+50 XP',
-                        streakLabel: 'Streak Extended!',
-                      ),
-                    ),
-                  );
+                  setState(() => _busy = true);
 
-                  if (!context.mounted) return;
-                  Navigator.of(context).maybePop();
+                  // Award + mark completion (idempotent)
+                  try {
+                    final user = FirebaseAuth.instance.currentUser;
+                    if (user == null) {
+                      return;
+                    }
+
+                    AnalyticsService.instance.track('daily_riddle_complete_attempt', props: {
+                      'dateKey': dateKey,
+                      'xpAward': riddle.xpAward,
+                      'selected': _selected,
+                      'correct': riddle.correctIndex,
+                    });
+
+                    final didAward = await FirestoreService().completeDailyRiddle(
+                      uid: user.uid,
+                      dateKey: dateKey,
+                      xpAward: riddle.xpAward,
+                    );
+
+                    AnalyticsService.instance.track('daily_riddle_completed', props: {
+                      'dateKey': dateKey,
+                      'awarded': didAward,
+                      'xpAward': riddle.xpAward,
+                    });
+
+                    // Show celebration then go back.
+                    if (!mounted) return;
+                    await navigator.push(
+                      MaterialPageRoute(
+                        fullscreenDialog: true,
+                        builder: (_) => VictoryCelebrationScreen(
+                          title: 'Mastermind!',
+                          subtitle: riddle.explanation.trim().isEmpty
+                              ? 'You decoded the riddle with ease.'
+                              : riddle.explanation,
+                          xpRewardLabel: didAward ? '+${riddle.xpAward} XP' : 'Completed',
+                          streakLabel: didAward ? 'Streak Updated!' : 'Already completed today',
+                        ),
+                      ),
+                    );
+                  } catch (e) {
+                    AnalyticsService.instance.track('daily_riddle_complete_failed', props: {
+                      'error': e.toString(),
+                    });
+                  } finally {
+                    if (mounted) setState(() => _busy = false);
+                  }
+
+                  if (!mounted) return;
+                  navigator.maybePop();
                 },
                 icon: const Icon(Icons.arrow_forward_rounded),
                 toneColor: _submitted ? cs.primaryContainer : cs.secondaryContainer,
@@ -360,6 +443,8 @@ class _RiddleQuestScreenState extends State<RiddleQuestScreen> {
             ),
           )
         ],
+      );
+        },
       ),
     );
   }

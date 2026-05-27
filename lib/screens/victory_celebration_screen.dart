@@ -24,9 +24,15 @@ class VictoryCelebrationScreen extends StatefulWidget {
 }
 
 class _VictoryCelebrationScreenState extends State<VictoryCelebrationScreen> {
+  String _digitsOnly(String raw) {
+    final m = RegExp(r'\d+').allMatches(raw).map((e) => e.group(0)!).join();
+    return m.isEmpty ? '0' : m;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final streakNumber = _digitsOnly(widget.streakLabel);
     return Scaffold(
       backgroundColor: EoColors.surface,
       body: Stack(
@@ -107,7 +113,7 @@ class _VictoryCelebrationScreenState extends State<VictoryCelebrationScreen> {
                                   ),
                                   const SizedBox(height: 10),
                                   Text(
-                                    '13',
+                                    streakNumber,
                                     style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                                           fontWeight: FontWeight.w900,
                                           color: EoColors.onSurface,
@@ -203,19 +209,11 @@ class _VictoryCelebrationScreenState extends State<VictoryCelebrationScreen> {
                         child: _SecondaryActionButton(
                           icon: Icons.share,
                           label: 'Share Achievement',
-                          onTap: () => ScaffoldMessenger.of(context)
-                              .showSnackBar(const SnackBar(content: Text('Share — coming soon'))),
+                          onTap: () {},
                         ),
                       ),
                       const SizedBox(height: 26),
-                      Text(
-                        'DAILY QUEST PROGRESS: 80% COMPLETE',
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: EoColors.onSurfaceVariant.withValues(alpha: 0.60),
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 2.0,
-                            ),
-                      ),
+                      const SizedBox.shrink(),
                     ],
                   ),
                 ),
@@ -395,7 +393,7 @@ class _MascotWithBadge extends StatelessWidget {
             child: Image.network(
               'https://lh3.googleusercontent.com/aida-public/AB6AXuAkII9dZAwOTcK2ucX0HmUO-JmoK2IGYMvboz2Sj95zB_ZSG6Lm8iDCQLp-jPNoYQf1BHd5dC9BwwCEvoQ1MA6nWT4x9Tw5EuUBQGdkjRK14kZg6zgQA6Svd8w0fFpVsU9QMotanMPQd-rUKepbBCMhczZr3fw7nnNkNOXUkRCwUz8-WDzny-KHW19A-EGwqMKX8-aKt8uXeRNTuHaWLlbHjGgES-zcEyhDto9qE75jn0X2fzOBTSS_4IwSsDNXqJxKnInkbV27mxcg',
               fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => Image.asset(
+              errorBuilder: (context, error, stackTrace) => Image.asset(
                 'screens/stitch/victory_celebration/screen.png',
                 fit: BoxFit.cover,
               ),

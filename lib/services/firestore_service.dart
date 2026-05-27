@@ -21,10 +21,41 @@ class FirestoreService {
   CollectionReference<Map<String, dynamic>> get _enrollments => _db.collection('user_enrollments');
   CollectionReference<Map<String, dynamic>> get _progress => _db.collection('user_progress');
 
+  // Phase 1/2: daily sprint content (one document per day)
+  CollectionReference<Map<String, dynamic>> get _dailySprints => _db.collection('daily_sprints');
+
   // ===== Gamified platform (Phase 3) collections =====
   CollectionReference<Map<String, dynamic>> get _segments => _db.collection('segments');
   CollectionReference<Map<String, dynamic>> get _activities => _db.collection('activities');
   CollectionReference<Map<String, dynamic>> get _sprintCompletions => _db.collection('sprint_completions');
+
+  // Phase 1/2: Riddles + Reset Studio + Rituals
+  CollectionReference<Map<String, dynamic>> get _dailyRiddles => _db.collection('daily_riddles');
+  CollectionReference<Map<String, dynamic>> get _resetItems => _db.collection('reset_items');
+  CollectionReference<Map<String, dynamic>> get _rituals => _db.collection('rituals');
+
+  // Completions
+  CollectionReference<Map<String, dynamic>> get _riddleCompletions => _db.collection('riddle_completions');
+  CollectionReference<Map<String, dynamic>> get _activityCompletions => _db.collection('activity_completions');
+
+  /// Sprint 2: unified “daily completion” marker.
+  ///
+  /// - Doc id: {uid}_{yyyy-MM-dd}
+  /// - Source: sprint/module/other
+  CollectionReference<Map<String, dynamic>> get _dailyCompletions => _db.collection('daily_completions');
+
+  String _dateKey(DateTime now) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${now.year}-${two(now.month)}-${two(now.day)}';
+  }
+
+  String _yesterdayKeyFrom(String dateKey) {
+    DateTime parseKey(String k) => DateTime.parse(k);
+    String keyOf(DateTime d) =>
+        '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    final today = parseKey(dateKey);
+    return keyOf(today.subtract(const Duration(days: 1)));
+  }
 
   String _userProgressDocId({
     required String uid,
@@ -83,6 +114,8 @@ class FirestoreService {
       if (!current.containsKey('streakCurrent')) 'streakCurrent': 0,
       if (!current.containsKey('streakBest')) 'streakBest': 0,
       if (!current.containsKey('lastSprintDate')) 'lastSprintDate': null,
+      // Sprint 2: unified daily completion date (yyyy-MM-dd)
+      if (!current.containsKey('lastDailyDate')) 'lastDailyDate': null,
       if (!snap.exists) 'createdAt': FieldValue.serverTimestamp(),
 
       // Populate name from Google Auth only when user doc doesn't already have it.
@@ -171,6 +204,7 @@ class FirestoreService {
   }) async {
     final completionId = '${uid}_$dateKey';
     final completionRef = _sprintCompletions.doc(completionId);
+    final dailyRef = _dailyCompletions.doc(completionId);
     final userRef = _users.doc(uid);
 
     // We keep the transaction limited to user-owned collections so it never fails
@@ -181,22 +215,35 @@ class FirestoreService {
         return false;
       }
 
+      // Read daily completion marker (may not exist).
+      final dailySnap = await tx.get(dailyRef);
+
       final userSnap = await tx.get(userRef);
       final data = userSnap.data() ?? <String, dynamic>{};
 
-      final last = (data['lastSprintDate'] as String?)?.trim();
+      // Streak is driven by `lastDailyDate` (Sprint 2). Fallback to legacy `lastSprintDate`.
+      final last = (data['lastDailyDate'] as String?)?.trim() ??
+          (data['lastSprintDate'] as String?)?.trim();
       final currentStreak = (data['streakCurrent'] as num?)?.toInt() ?? 0;
       final bestStreak = (data['streakBest'] as num?)?.toInt() ?? 0;
 
-      // Compute yesterday key from dateKey (yyyy-MM-dd)
-      DateTime parseKey(String k) => DateTime.parse(k);
-      String keyOf(DateTime d) =>
-          '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-      final today = parseKey(dateKey);
-      final yesterdayKey = keyOf(today.subtract(const Duration(days: 1)));
+      final yesterdayKey = _yesterdayKeyFrom(dateKey);
 
-      final nextStreak = (last == yesterdayKey) ? (currentStreak + 1) : 1;
-      final nextBest = nextStreak > bestStreak ? nextStreak : bestStreak;
+      // Only update streak once per day across any completion source.
+      final shouldUpdateStreak = !dailySnap.exists;
+      final nextStreak = shouldUpdateStreak ? ((last == yesterdayKey) ? (currentStreak + 1) : 1) : currentStreak;
+      final nextBest = shouldUpdateStreak
+          ? (nextStreak > bestStreak ? nextStreak : bestStreak)
+          : bestStreak;
+
+      if (shouldUpdateStreak) {
+        tx.set(dailyRef, {
+          'userId': uid,
+          'dateKey': dateKey,
+          'source': 'sprint',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
 
       tx.set(completionRef, {
         'userId': uid,
@@ -208,9 +255,11 @@ class FirestoreService {
 
       tx.set(userRef, {
         'xp': FieldValue.increment(xpAward),
-        'streakCurrent': nextStreak,
-        'streakBest': nextBest,
+        if (shouldUpdateStreak) 'streakCurrent': nextStreak,
+        if (shouldUpdateStreak) 'streakBest': nextBest,
+        // legacy field kept for compatibility
         'lastSprintDate': dateKey,
+        if (shouldUpdateStreak) 'lastDailyDate': dateKey,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
@@ -222,6 +271,8 @@ class FirestoreService {
       await _publicUsers.doc(uid).set({
         'uid': uid,
         'xp': FieldValue.increment(xpAward),
+        // If streak was updated, mirror it (best-effort).
+        // We don't have the computed values here, so rely on client-side read later.
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true)).catchError((_) {});
     }
@@ -243,6 +294,30 @@ class FirestoreService {
     return _activities.where('segmentId', isEqualTo: segmentId).where('isActive', isEqualTo: true).orderBy('order');
   }
 
+  Query<Map<String, dynamic>> queryActivityCompletionsForSegment({
+    required String uid,
+    required String segmentId,
+  }) {
+    // Note: we store the segmentId in the completion doc so we can query efficiently.
+    return _activityCompletions.where('userId', isEqualTo: uid).where('segmentId', isEqualTo: segmentId);
+  }
+
+  DocumentReference<Map<String, dynamic>> dailySprintDoc(String dateKey) {
+    return _dailySprints.doc(dateKey);
+  }
+
+  DocumentReference<Map<String, dynamic>> dailyRiddleDoc(String dateKey) {
+    return _dailyRiddles.doc(dateKey);
+  }
+
+  Query<Map<String, dynamic>> queryActiveResetItems() {
+    return _resetItems.where('isActive', isEqualTo: true).orderBy('order');
+  }
+
+  Query<Map<String, dynamic>> queryActiveRituals() {
+    return _rituals.where('isActive', isEqualTo: true).orderBy('order');
+  }
+
 
   /// ===== Phase 2 schema APIs =====
 
@@ -255,6 +330,11 @@ class FirestoreService {
         .where('pathId', isEqualTo: pathId)
         .where('isActive', isEqualTo: true)
         .orderBy('order');
+  }
+
+  /// For computing progress across many paths.
+  Query<Map<String, dynamic>> queryActiveModules() {
+    return _modules.where('isActive', isEqualTo: true);
   }
 
   /// Stream user enrollments (active only).
@@ -347,7 +427,217 @@ class FirestoreService {
       await addXp(uid: uid, delta: xpReward);
     }
 
+    // Sprint 2: completing any lesson/module counts as a daily completion (streak trigger).
+    // Best-effort only; should never block module completion.
+    try {
+      await completeDailySession(
+        uid: uid,
+        dateKey: _dateKey(DateTime.now()),
+        source: 'module',
+        meta: {
+          'pathId': pathId,
+          'moduleId': moduleId,
+        },
+      );
+    } catch (_) {
+      // no-op
+    }
+
     return true;
+  }
+
+  /// Complete a daily riddle (idempotent per-day) and award XP.
+  ///
+  /// Also triggers daily completion/streak update using the unified `daily_completions`.
+  Future<bool> completeDailyRiddle({
+    required String uid,
+    required String dateKey,
+    required int xpAward,
+  }) async {
+    final completionId = '${uid}_$dateKey';
+    final completionRef = _riddleCompletions.doc(completionId);
+    final dailyRef = _dailyCompletions.doc(completionId);
+    final userRef = _users.doc(uid);
+
+    final didComplete = await _db.runTransaction((tx) async {
+      final completionSnap = await tx.get(completionRef);
+      if (completionSnap.exists) return false;
+
+      final dailySnap = await tx.get(dailyRef);
+      final userSnap = await tx.get(userRef);
+      final data = userSnap.data() ?? <String, dynamic>{};
+
+      final last = (data['lastDailyDate'] as String?)?.trim() ??
+          (data['lastSprintDate'] as String?)?.trim();
+      final currentStreak = (data['streakCurrent'] as num?)?.toInt() ?? 0;
+      final bestStreak = (data['streakBest'] as num?)?.toInt() ?? 0;
+
+      final yesterdayKey = _yesterdayKeyFrom(dateKey);
+      final shouldUpdateStreak = !dailySnap.exists;
+      final nextStreak = shouldUpdateStreak ? ((last == yesterdayKey) ? (currentStreak + 1) : 1) : currentStreak;
+      final nextBest = shouldUpdateStreak
+          ? (nextStreak > bestStreak ? nextStreak : bestStreak)
+          : bestStreak;
+
+      if (shouldUpdateStreak) {
+        tx.set(dailyRef, {
+          'userId': uid,
+          'dateKey': dateKey,
+          'source': 'riddle',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      tx.set(completionRef, {
+        'userId': uid,
+        'dateKey': dateKey,
+        'xpAward': xpAward,
+        'completedAt': FieldValue.serverTimestamp(),
+      });
+
+      tx.set(userRef, {
+        'xp': FieldValue.increment(xpAward),
+        if (shouldUpdateStreak) 'streakCurrent': nextStreak,
+        if (shouldUpdateStreak) 'streakBest': nextBest,
+        if (shouldUpdateStreak) 'lastDailyDate': dateKey,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      return true;
+    });
+
+    if (didComplete) {
+      await _publicUsers.doc(uid).set({
+        'uid': uid,
+        'xp': FieldValue.increment(xpAward),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).catchError((_) {});
+    }
+
+    return didComplete;
+  }
+
+  /// Mark an activity completed (idempotent per-activity for a user).
+  Future<bool> markActivityCompleted({
+    required String uid,
+    required String segmentId,
+    required String activityId,
+    required int xpAward,
+  }) async {
+    final completionId = '${uid}_${segmentId}_$activityId';
+    final ref = _activityCompletions.doc(completionId);
+    final dailyRef = _dailyCompletions.doc('${uid}_${_dateKey(DateTime.now())}');
+    final userRef = _users.doc(uid);
+    final todayKey = _dateKey(DateTime.now());
+
+    final didComplete = await _db.runTransaction((tx) async {
+      final snap = await tx.get(ref);
+      if (snap.exists) return false;
+
+      final dailySnap = await tx.get(dailyRef);
+      final userSnap = await tx.get(userRef);
+      final data = userSnap.data() ?? <String, dynamic>{};
+      final last = (data['lastDailyDate'] as String?)?.trim() ?? (data['lastSprintDate'] as String?)?.trim();
+      final currentStreak = (data['streakCurrent'] as num?)?.toInt() ?? 0;
+      final bestStreak = (data['streakBest'] as num?)?.toInt() ?? 0;
+      final yesterdayKey = _yesterdayKeyFrom(todayKey);
+      final shouldUpdateStreak = !dailySnap.exists;
+      final nextStreak = shouldUpdateStreak ? ((last == yesterdayKey) ? (currentStreak + 1) : 1) : currentStreak;
+      final nextBest = shouldUpdateStreak ? (nextStreak > bestStreak ? nextStreak : bestStreak) : bestStreak;
+
+      tx.set(ref, {
+        'userId': uid,
+        'segmentId': segmentId,
+        'activityId': activityId,
+        'xpAward': xpAward,
+        'completedAt': FieldValue.serverTimestamp(),
+      });
+
+      if (shouldUpdateStreak) {
+        tx.set(dailyRef, {
+          'userId': uid,
+          'dateKey': todayKey,
+          'source': 'activity',
+          'createdAt': FieldValue.serverTimestamp(),
+        });
+      }
+
+      tx.set(userRef, {
+        'xp': FieldValue.increment(xpAward),
+        if (shouldUpdateStreak) 'streakCurrent': nextStreak,
+        if (shouldUpdateStreak) 'streakBest': nextBest,
+        if (shouldUpdateStreak) 'lastDailyDate': todayKey,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      return true;
+    });
+
+    if (didComplete) {
+      await _publicUsers.doc(uid).set({
+        'uid': uid,
+        'xp': FieldValue.increment(xpAward),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).catchError((_) {});
+    }
+
+    return didComplete;
+  }
+
+  /// Sprint 2: Mark the day as completed (streak) for any qualifying action.
+  ///
+  /// Idempotent per-day via `daily_completions/{uid}_{dateKey}`.
+  Future<bool> completeDailySession({
+    required String uid,
+    required String dateKey,
+    required String source,
+    Map<String, dynamic>? meta,
+  }) async {
+    final docId = '${uid}_$dateKey';
+    final dailyRef = _dailyCompletions.doc(docId);
+    final userRef = _users.doc(uid);
+
+    final didWrite = await _db.runTransaction((tx) async {
+      final snap = await tx.get(dailyRef);
+      if (snap.exists) return false;
+
+      final userSnap = await tx.get(userRef);
+      final data = userSnap.data() ?? <String, dynamic>{};
+      final last = (data['lastDailyDate'] as String?)?.trim();
+      final currentStreak = (data['streakCurrent'] as num?)?.toInt() ?? 0;
+      final bestStreak = (data['streakBest'] as num?)?.toInt() ?? 0;
+      final yesterdayKey = _yesterdayKeyFrom(dateKey);
+
+      final nextStreak = (last == yesterdayKey) ? (currentStreak + 1) : 1;
+      final nextBest = nextStreak > bestStreak ? nextStreak : bestStreak;
+
+      tx.set(dailyRef, {
+        'userId': uid,
+        'dateKey': dateKey,
+        'source': source,
+        if (meta != null) 'meta': meta,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+
+      tx.set(userRef, {
+        'streakCurrent': nextStreak,
+        'streakBest': nextBest,
+        'lastDailyDate': dateKey,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+
+      return true;
+    });
+
+    // Best-effort mirror to public_users.
+    if (didWrite) {
+      await _publicUsers.doc(uid).set({
+        'uid': uid,
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true)).catchError((_) {});
+    }
+
+    return didWrite;
   }
 
   Stream<DocumentSnapshot<Map<String, dynamic>>> streamUserDoc(String uid) {

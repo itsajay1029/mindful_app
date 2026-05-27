@@ -1,70 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../models/reset_item.dart';
+import '../services/firestore_service.dart';
 import '../ui/emerald_orbit/tokens.dart';
 import '../ui/emerald_orbit/widgets/eo_card.dart';
 import 'reset_studio_player_screen.dart';
 
-/// Reset Studio (Stitch-inspired, mock data).
-///
-/// Designed to feel premium/appealing even before real content is wired.
+/// Reset Studio (Stitch-inspired) backed by Firestore.
 class ResetStudioScreen extends StatelessWidget {
   const ResetStudioScreen({super.key});
 
-  static const _xpToday = 48;
-
-  static const _quickResets = <_ResetItem>[
-    _ResetItem(
-      title: 'Instant Clarity',
-      meta: '3 mins • Guided Breathing',
-      chipText: '3',
-      chipBg: Color(0xFFBAF9D4),
-      chipFg: EoColors.primary,
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    ),
-    _ResetItem(
-      title: 'Focus Realignment',
-      meta: '5 mins • Visual Scanning',
-      chipIcon: Icons.center_focus_strong_rounded,
-      chipBg: Color(0xFFFCCB52),
-      chipFg: EoColors.secondary,
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-    ),
-    _ResetItem(
-      title: 'The 60-Second Stop',
-      meta: '1 min • Micro-Meditation',
-      chipIcon: Icons.self_improvement_rounded,
-      chipBg: Color(0xFFFFE1BA),
-      chipFg: EoColors.tertiary,
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4',
-    ),
-    _ResetItem(
-      title: 'Brain Flush',
-      meta: '8 mins • White Noise Mix',
-      chipIcon: Icons.air_rounded,
-      chipBg: Color(0xFFE7EAEE),
-      chipFg: EoColors.onSurfaceVariant,
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4',
-    ),
-  ];
-
-  static const _bento = <_BentoItem>[
-    _BentoItem(
-      title: 'Mind Scan',
-      subtitle: 'Deep emotional check-in',
-      icon: Icons.psychology_rounded,
-      bg: Color(0x33FCCB52),
-      fg: EoColors.onSecondaryContainer,
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4',
-    ),
-    _BentoItem(
-      title: 'Energy Spike',
-      subtitle: 'Quick CNS activation',
-      icon: Icons.auto_awesome_rounded,
-      bg: Color(0x1AFF9800),
-      fg: EoColors.onTertiaryContainer,
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-    ),
-  ];
+  IconData? _iconFromName(String? raw) {
+    final v = (raw ?? '').trim();
+    if (v.isEmpty) return null;
+    return switch (v) {
+      'self_improvement' => Icons.self_improvement_rounded,
+      'air' => Icons.air_rounded,
+      'center_focus' => Icons.center_focus_strong_rounded,
+      'psychology' => Icons.psychology_rounded,
+      'auto_awesome' => Icons.auto_awesome_rounded,
+      _ => null,
+    };
+  }
 
   void _openPlayer(BuildContext context, {required String title, required String url}) {
     Navigator.of(context).push(
@@ -82,35 +40,23 @@ class ResetStudioScreen extends StatelessWidget {
       backgroundColor: EoColors.background,
       appBar: AppBar(
         title: const Text('Reset Studio'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: cs.tertiaryContainer.withValues(alpha: 0.28),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.bolt_rounded, size: 16, color: cs.tertiary),
-                  const SizedBox(width: 8),
-                  Text(
-                    '$_xpToday XP',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: cs.tertiary,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-        children: [
+      body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: FirestoreService().queryActiveResetItems().snapshots(),
+        builder: (context, snap) {
+          if (snap.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final items = (snap.data?.docs ?? [])
+              .map(ResetItem.fromDoc)
+              .where((i) => i.isActive && i.mediaUrl.trim().isNotEmpty)
+              .toList()
+            ..sort((a, b) => a.order.compareTo(b.order));
+
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+            children: [
           // Hero
           EoCard(
             radius: EoRadii.lg,
@@ -180,11 +126,7 @@ class ResetStudioScreen extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
               ),
               TextButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('See all coming soon')),
-                  );
-                },
+                onPressed: null,
                 child: Text(
                   'See all',
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -198,37 +140,40 @@ class ResetStudioScreen extends StatelessWidget {
 
           const SizedBox(height: 8),
 
-          ..._quickResets.map(
-            (it) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _QuickResetRow(
-                item: it,
-                onTap: () => _openPlayer(context, title: it.title, url: it.url),
+          if (items.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                'No resets available yet. Add documents to `reset_items` (isActive=true).',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: EoColors.onSurfaceVariant),
               ),
             ),
-          ),
 
-          const SizedBox(height: 8),
-
-          // Bento
-          Row(
-            children: [
-              Expanded(
-                child: _BentoCard(
-                  item: _bento[0],
-                  onTap: () => _openPlayer(context, title: _bento[0].title, url: _bento[0].url),
+          ...items.map(
+            (it) {
+              final chipBg = it.chipBg != null ? Color(it.chipBg!) : cs.primaryContainer;
+              final chipFg = it.chipFg != null ? Color(it.chipFg!) : cs.primary;
+              final icon = _iconFromName(it.chipIcon);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _QuickResetRow(
+                  item: _ResetItem(
+                    title: it.title,
+                    meta: it.meta,
+                    url: it.mediaUrl,
+                    chipBg: chipBg,
+                    chipFg: chipFg,
+                    chipText: it.chipText,
+                    chipIcon: icon,
+                  ),
+                  onTap: () => _openPlayer(context, title: it.title, url: it.mediaUrl),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _BentoCard(
-                  item: _bento[1],
-                  onTap: () => _openPlayer(context, title: _bento[1].title, url: _bento[1].url),
-                ),
-              ),
-            ],
+              );
+            },
           ),
         ],
+          );
+        },
       ),
     );
   }
@@ -364,72 +309,6 @@ class _QuickResetRow extends StatelessWidget {
   }
 }
 
-class _BentoItem {
-  const _BentoItem({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    required this.bg,
-    required this.fg,
-    required this.url,
-  });
 
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final Color bg;
-  final Color fg;
-  final String url;
-}
 
-class _BentoCard extends StatelessWidget {
-  const _BentoCard({required this.item, required this.onTap});
 
-  final _BentoItem item;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(EoRadii.lg),
-        child: Ink(
-          height: 150,
-          decoration: BoxDecoration(
-            color: item.bg,
-            borderRadius: BorderRadius.circular(EoRadii.lg),
-            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.10)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(item.icon, size: 34, color: item.fg),
-                const Spacer(),
-                Text(
-                  item.title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: item.fg,
-                      ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  item.subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: item.fg.withValues(alpha: 0.70),
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}

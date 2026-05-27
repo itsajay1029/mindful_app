@@ -12,7 +12,7 @@ class EoTactileButton extends StatefulWidget {
     this.isLoading = false,
     this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
     this.radius = EoRadii.xl,
-  })  : variant = _Variant.primary,
+  })  : _variant = _Variant.primary,
         toneColor = null;
 
   const EoTactileButton.tonal({
@@ -21,17 +21,16 @@ class EoTactileButton extends StatefulWidget {
     required this.onPressed,
     this.icon,
     this.isLoading = false,
-    Color? toneColor,
+    this.toneColor,
     this.padding = const EdgeInsets.symmetric(horizontal: 24, vertical: 18),
     this.radius = EoRadii.xl,
-  })  : variant = _Variant.tonal,
-        toneColor = toneColor;
+  }) : _variant = _Variant.tonal;
 
   final String label;
   final VoidCallback? onPressed;
   final Widget? icon;
   final bool isLoading;
-  final _Variant variant;
+  final _Variant _variant;
   final Color? toneColor;
   final EdgeInsets padding;
   final double radius;
@@ -50,19 +49,19 @@ class _EoTactileButtonState extends State<EoTactileButton> {
     final cs = Theme.of(context).colorScheme;
     final enabled = widget.onPressed != null && !widget.isLoading;
 
-    final bg = switch (widget.variant) {
+    final bg = switch (widget._variant) {
       _Variant.primary => cs.primary,
       _Variant.tonal => widget.toneColor ?? cs.primaryContainer,
     };
 
-    final fg = switch (widget.variant) {
+    final fg = switch (widget._variant) {
       _Variant.primary => cs.onPrimary,
       _Variant.tonal => cs.onPrimaryContainer,
     };
 
     // Stitch “tactile” shadow is a hard bottom shadow, not a soft cloud.
     // Example: shadow-[0_8px_0_rgba(48,108,79,1)] and active:translate-y-2.
-    final bottomShadowColor = widget.variant == _Variant.primary
+    final bottomShadowColor = widget._variant == _Variant.primary
         ? EoColors.onPrimaryFixedVariant
         : EoColors.onSecondaryFixedVariant;
 

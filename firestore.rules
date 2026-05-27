@@ -6,6 +6,10 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function isOwner(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
     // ===== App collections =====
 
     // User profile
@@ -21,17 +25,17 @@ service cloud.firestore {
 
     // Gamified content: public read
     match /segments/{segmentId} {
-      allow read: if true;
+      allow read: if signedIn();
       allow write: if false;
     }
 
     match /activities/{activityId} {
-      allow read: if true;
+      allow read: if signedIn();
       allow write: if false;
     }
 
     match /daily_sprints/{dateKey} {
-      allow read: if true;
+      allow read: if signedIn();
       allow write: if false;
     }
 
@@ -50,15 +54,33 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    // Sprint 2 daily completion marker (user-owned; id: {uid}_{yyyy-MM-dd})
+    match /daily_completions/{docId} {
+      allow read: if signedIn() && docId.matches('^' + request.auth.uid + '_.*$');
+      allow create: if signedIn()
+        && docId.matches('^' + request.auth.uid + '_.*$')
+        && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
     // Learning content is public read (or change to `signedIn()` if you want auth required)
     match /learning_paths/{pathId} {
-      allow read: if true;
+      allow read: if signedIn();
       allow write: if false;
     }
 
     match /modules/{moduleId} {
-      allow read: if true;
+      allow read: if signedIn();
       allow write: if false;
+    }
+
+    // Analytics events (Sprint 1)
+    // Each user can only write/read their own events.
+    // (If you want admin dashboards later, read via server/admin SDK.)
+    match /events/{eventId} {
+      allow create: if isOwner(request.resource.data.userId);
+      allow read: if isOwner(resource.data.userId);
+      allow update, delete: if false;
     }
 
     // Enrollment: each user can only see/change their own enrollment docs

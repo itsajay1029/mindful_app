@@ -3,8 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
 
+import '../models/learning_module.dart';
 import '../models/learning_path.dart';
 import '../models/user_enrollment.dart';
+import '../models/user_progress.dart';
+import '../services/analytics_service.dart';
 import '../services/firestore_service.dart';
 import '../ui/emerald_orbit/tokens.dart';
 import '../widgets/dashboard/rich_course_card.dart';
@@ -30,7 +33,9 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
   final _searchFocusNode = FocusNode();
 
   late final Stream<QuerySnapshot<Map<String, dynamic>>> _pathsStream;
+  late final Stream<QuerySnapshot<Map<String, dynamic>>> _modulesStream;
   Stream<QuerySnapshot<Map<String, dynamic>>>? _enrollmentsStream;
+  Stream<QuerySnapshot<Map<String, dynamic>>>? _completedProgressStream;
 
   Timer? _searchDebounce;
   String _query = '';
@@ -47,6 +52,9 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
     super.initState();
     // Cache streams so they don't get recreated on every rebuild/keystroke.
     _pathsStream = _firestore.queryActiveLearningPaths().snapshots();
+    _modulesStream = _firestore.queryActiveModules().snapshots();
+
+    AnalyticsService.instance.track('learning_hub_opened');
   }
 
   @override
@@ -65,6 +73,11 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
       if (!mounted) return;
       setState(() {
         _query = value.trim().toLowerCase();
+      });
+
+      AnalyticsService.instance.track('learning_hub_search', props: {
+        'queryLen': _query.length,
+        'hasQuery': _query.isNotEmpty,
       });
     });
   }
@@ -98,9 +111,21 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
 
     setState(() => _enrollingPathIds.add(pathId));
     try {
+      AnalyticsService.instance.track('course_enroll_attempt', props: {
+        'pathId': pathId,
+      });
       await _firestore.enrollInPath(uid: uid, pathId: pathId);
+
+      AnalyticsService.instance.track('course_enrolled', props: {
+        'pathId': pathId,
+      });
     } catch (e) {
       if (!mounted) return;
+
+      AnalyticsService.instance.track('course_enroll_failed', props: {
+        'pathId': pathId,
+        'error': e.toString(),
+      });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to enroll. Please try again.\n$e')),
       );
@@ -120,6 +145,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
 
     // Create/caches enrollment stream once per user session.
     _enrollmentsStream ??= _firestore.queryUserEnrollments(user.uid).snapshots();
+    _completedProgressStream ??= _firestore.queryCompletedUserProgress(user.uid).snapshots();
 
     return Scaffold(
       backgroundColor: EoColors.background,
@@ -142,15 +168,56 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
               .toList();
 
           return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-            stream: _enrollmentsStream,
-            builder: (context, enrollSnap) {
-              final enrollments = (enrollSnap.data?.docs ?? []).map(UserEnrollment.fromDoc).toList();
-              final enrolledPathIds = enrollments.map((e) => e.pathId).toSet();
+            stream: _modulesStream,
+            builder: (context, modulesSnap) {
+              final modules = (modulesSnap.data?.docs ?? [])
+                  .map(LearningModule.fromDoc)
+                  .where((m) => m.isActive)
+                  .toList();
 
-              final filtered = _filterByTitle(_filterByCategory(paths), _query);
+              final totalModulesByPathId = <String, int>{};
+              for (final m in modules) {
+                if (m.pathId.trim().isEmpty) continue;
+                totalModulesByPathId[m.pathId] = (totalModulesByPathId[m.pathId] ?? 0) + 1;
+              }
 
-              return Column(
-                children: [
+              return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: _completedProgressStream,
+                builder: (context, completedSnap) {
+                  final completed = (completedSnap.data?.docs ?? [])
+                      .map(UserProgress.fromDoc)
+                      .where((p) => p.completed)
+                      .toList();
+
+                  final completedModulesByPathId = <String, int>{};
+                  for (final p in completed) {
+                    if (p.pathId.trim().isEmpty) continue;
+                    completedModulesByPathId[p.pathId] =
+                        (completedModulesByPathId[p.pathId] ?? 0) + 1;
+                  }
+
+                  return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: _enrollmentsStream,
+                    builder: (context, enrollSnap) {
+                      final enrollments = (enrollSnap.data?.docs ?? [])
+                          .map(UserEnrollment.fromDoc)
+                          .toList();
+                      final enrolledPathIds = enrollments
+                          .where((e) => e.status == 'active')
+                          .map((e) => e.pathId)
+                          .toSet();
+
+                      final filtered = _filterByTitle(_filterByCategory(paths), _query);
+
+                      double? progressForPath(String pathId) {
+                        final total = totalModulesByPathId[pathId] ?? 0;
+                        if (total <= 0) return null;
+                        final done = completedModulesByPathId[pathId] ?? 0;
+                        return (done / total).clamp(0, 1);
+                      }
+
+                      return Column(
+                        children: [
                   // Search (Stitch-inspired)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
@@ -204,12 +271,7 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                             borderRadius: BorderRadius.circular(18),
                           ),
                           child: IconButton(
-                            onPressed: () {
-                              // Placeholder for filters UI.
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Filters coming soon')),
-                              );
-                            },
+                            onPressed: null,
                             icon: Icon(Icons.tune_rounded, color: Theme.of(context).colorScheme.primary),
                           ),
                         ),
@@ -224,14 +286,20 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       scrollDirection: Axis.horizontal,
                       itemCount: _categories.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 10),
+                      separatorBuilder: (context, index) => const SizedBox(width: 10),
                       itemBuilder: (context, i) {
                         final selected = i == _selectedCategoryIndex;
                         final label = _categories[i];
                         final bg = selected ? Theme.of(context).colorScheme.primary : EoColors.surfaceContainerLowest;
                         final fg = selected ? Theme.of(context).colorScheme.onPrimary : EoColors.onSurfaceVariant;
                         return GestureDetector(
-                          onTap: () => setState(() => _selectedCategoryIndex = i),
+                          onTap: () {
+                            setState(() => _selectedCategoryIndex = i);
+                            AnalyticsService.instance.track('learning_hub_category_selected', props: {
+                              'index': i,
+                              'label': _categories[i],
+                            });
+                          },
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 180),
                             curve: Curves.easeOutCubic,
@@ -287,15 +355,19 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                               final isEnrolled = enrolledPathIds.contains(p.id);
                               final enrolling = _enrollingPathIds.contains(p.id);
 
-                              // Without a progress model in Firestore, show a mock progress for enrolled.
-                              final progress = isEnrolled ? 0.65 : null;
+                              final progress = isEnrolled ? progressForPath(p.id) : null;
 
                               return RichCourseCard(
                                 course: p,
                                 progress01: progress,
-                                isNew: !isEnrolled && i == 2,
+                                // Only show NEW when it is explicitly declared in Firestore.
+                                isNew: false,
                                 primaryActionLabel: isEnrolled ? 'Continue' : (enrolling ? 'Enrolling...' : 'Enroll'),
                                 onTap: () {
+                                  AnalyticsService.instance.track('course_opened', props: {
+                                    'pathId': p.id,
+                                    'source': 'learning_hub',
+                                  });
                                   Navigator.of(context).push(
                                     MaterialPageRoute(
                                       builder: (_) => CourseDetailScreen(path: p),
@@ -306,6 +378,10 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                                     ? () {}
                                     : () {
                                         if (isEnrolled) {
+                                          AnalyticsService.instance.track('course_continue_pressed', props: {
+                                            'pathId': p.id,
+                                            'source': 'learning_hub',
+                                          });
                                           Navigator.of(context).push(
                                             MaterialPageRoute(
                                               builder: (_) => CourseDetailScreen(path: p),
@@ -320,6 +396,10 @@ class _LearningHubScreenState extends State<LearningHubScreen> {
                           ),
                   ),
                 ],
+                      );
+                    },
+                  );
+                },
               );
             },
           );

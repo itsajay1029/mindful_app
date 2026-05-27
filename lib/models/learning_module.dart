@@ -1,5 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'module_step.dart';
+
 class LearningModule {
   const LearningModule({
     required this.id,
@@ -12,6 +14,7 @@ class LearningModule {
     required this.xp,
     required this.order,
     required this.isActive,
+    this.steps,
   });
 
   final String id;
@@ -25,8 +28,20 @@ class LearningModule {
   final int order;
   final bool isActive;
 
+  /// Optional step-based lesson. If present and non-empty, UI should prefer
+  /// running these steps over the legacy single `contentUrl` player.
+  final List<ModuleStep>? steps;
+
   factory LearningModule.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
+
+    final rawSteps = (data['steps'] as List?)
+        ?.whereType<Map>()
+        .map((m) => Map<String, dynamic>.from(m))
+        .toList();
+
+    final steps = rawSteps?.map(ModuleStep.fromMap).toList();
+
     return LearningModule(
       id: doc.id,
       pathId: (data['pathId'] as String?) ?? '',
@@ -38,6 +53,7 @@ class LearningModule {
       xp: (data['xp'] as num?)?.toInt() ?? 0,
       order: (data['order'] as num?)?.toInt() ?? 0,
       isActive: data['isActive'] == true,
+      steps: (steps == null || steps.isEmpty) ? null : steps,
     );
   }
 }

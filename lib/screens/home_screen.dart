@@ -1,10 +1,20 @@
 import 'package:confetti/confetti.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../models/learning_module.dart';
+import '../models/learning_path.dart';
+import '../models/recommendation.dart';
+import '../models/daily_sprint.dart';
+import '../models/ritual.dart';
+import '../models/user_enrollment.dart';
+import '../models/user_progress.dart';
 import '../services/auth_service.dart';
 import '../services/firestore_service.dart';
+import '../services/recommendation_service.dart';
+import '../services/analytics_service.dart';
 import '../ui/emerald_orbit/tokens.dart';
 import '../ui/emerald_orbit/widgets/eo_avatar_ring.dart';
 import '../ui/emerald_orbit/widgets/eo_card.dart';
@@ -14,7 +24,10 @@ import 'auth_gate.dart';
 import 'daily_sprint_screen.dart';
 import 'leaderboard_screen.dart';
 import 'learning_hub_screen.dart';
+import 'course_detail_screen.dart';
+import 'module_player_screen.dart';
 import 'riddle_quest_screen.dart';
+import 'reset_studio_screen.dart';
 
 /// Home hub redesigned to match Stitch exports:
 /// - `screens/stitch/home_hub_1`
@@ -176,7 +189,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 final xp = (data['xp'] as num?)?.toInt() ?? 0;
                 final streak = (data['streakCurrent'] as num?)?.toInt() ?? 0;
 
+                String dateKey(DateTime now) {
+                  String two(int n) => n.toString().padLeft(2, '0');
+                  return '${now.year}-${two(now.month)}-${two(now.day)}';
+                }
+
+                final lastDailyDate = (data['lastDailyDate'] as String?)?.trim();
+                final completedToday = (lastDailyDate != null && lastDailyDate == dateKey(DateTime.now()));
+
                 Future<void> openSprint() async {
+                  if (completedToday) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Already completed today')),
+                    );
+                    return;
+                  }
+
+                  AnalyticsService.instance.track('daily_sprint_opened', props: {
+                    'source': 'home',
+                  });
                   final didAward = await Navigator.of(context).push<bool>(
                     MaterialPageRoute(builder: (_) => const DailySprintScreen()),
                   );
@@ -240,66 +271,98 @@ class _HomeScreenState extends State<HomeScreen> {
 
                     const SizedBox(height: 16),
 
+                    // Sprint 2: "Today's Session" (Duolingo-style next action)
+                    const _TodaysSessionCard(),
+
+                    const SizedBox(height: 16),
+
                     // Knowledge Quests (new home)
                     const _KnowledgeQuestsSection(),
 
                     // Daily Sprint card
-                    EoCard(
-                      padding: const EdgeInsets.all(20),
-                      border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.10)),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    StreamBuilder<DocumentSnapshot<Map<String, dynamic>>>(
+                      stream: FirestoreService().dailySprintDoc(dateKey(DateTime.now())).snapshots(),
+                      builder: (context, sprintSnap) {
+                        final exists = sprintSnap.data?.exists == true;
+                        final sprint = (exists && sprintSnap.data != null)
+                            ? DailySprint.fromDoc(sprintSnap.data!)
+                            : null;
+                        final xpAward = sprint?.xpAward ?? 0;
+                        final hasSprintToday = exists && xpAward > 0 && (sprint?.prompt.trim().isNotEmpty == true);
+
+                        final subtitle = completedToday
+                            ? 'Come back tomorrow for the next sprint.'
+                            : (hasSprintToday ? '1 question • ~2 min' : 'No sprint available today.');
+
+                        return EoCard(
+                          padding: const EdgeInsets.all(20),
+                          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.10)),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: cs.primaryContainer,
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                                child: Icon(Icons.bolt_rounded, color: cs.primary),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: cs.primaryContainer,
+                                      borderRadius: BorderRadius.circular(18),
+                                    ),
+                                    child: Icon(Icons.bolt_rounded, color: cs.primary),
+                                  ),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                    decoration: BoxDecoration(
+                                      color: cs.tertiaryContainer.withValues(alpha: 0.12),
+                                      borderRadius: BorderRadius.circular(999),
+                                    ),
+                                    child: Text(
+                                      completedToday
+                                          ? 'COMPLETED'
+                                          : (hasSprintToday ? '+$xpAward XP' : 'OFF'),
+                                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                            color: cs.tertiary,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 1.2,
+                                          ),
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                                decoration: BoxDecoration(
-                                  color: cs.tertiaryContainer.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(999),
-                                ),
-                                child: Text(
-                                  '+20 XP',
-                                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                        color: cs.tertiary,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1.2,
-                                      ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'Daily Sprint',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleLarge
+                                    ?.copyWith(fontWeight: FontWeight.w900),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                subtitle,
+                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                      color: EoColors.onSurfaceVariant,
+                                      fontStyle: FontStyle.italic,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                              const SizedBox(height: 14),
+                              SizedBox(
+                                width: double.infinity,
+                                child: EoTactileButton.primary(
+                                  label: completedToday
+                                      ? 'Completed'
+                                      : (hasSprintToday ? 'Start Sprint' : 'Unavailable'),
+                                  icon: const Icon(Icons.play_arrow_rounded),
+                                  onPressed:
+                                      (completedToday || !hasSprintToday) ? null : openSprint,
                                 ),
                               ),
                             ],
                           ),
-                          const SizedBox(height: 12),
-                          Text('Daily Sprint', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
-                          const SizedBox(height: 4),
-                          Text(
-                            '1 question • ~2 min',
-                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                  color: EoColors.onSurfaceVariant,
-                                  fontStyle: FontStyle.italic,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                          ),
-                          const SizedBox(height: 14),
-                          SizedBox(
-                            width: double.infinity,
-                            child: EoTactileButton.primary(
-                              label: 'Start Sprint',
-                              icon: const Icon(Icons.play_arrow_rounded),
-                              onPressed: openSprint,
-                            ),
-                          ),
-                        ],
-                      ),
+                        );
+                      },
                     ),
 
                     const SizedBox(height: 16),
@@ -711,6 +774,275 @@ class _MiniTag extends StatelessWidget {
   }
 }
 
+/// Sprint 2: Duolingo-style "Today’s Session".
+///
+/// Uses the existing Phase 2 Firestore schema:
+/// - learning_paths
+/// - modules
+/// - user_enrollments
+/// - user_progress
+///
+/// Logic:
+/// - compute recommendation using [RecommendationService]
+/// - on tap:
+///   - module recommendation -> open ModulePlayerScreen
+///   - path recommendation -> open CourseDetailScreen
+class _TodaysSessionCard extends StatelessWidget {
+  const _TodaysSessionCard();
+
+  @override
+  Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return const SizedBox.shrink();
+
+    final firestore = FirestoreService();
+    final reco = RecommendationService();
+    final cs = Theme.of(context).colorScheme;
+
+    return EoCard(
+      padding: const EdgeInsets.all(20),
+      border: Border.all(color: cs.primaryContainer.withValues(alpha: 0.40)),
+      shadowColor: cs.primary.withValues(alpha: 0.08),
+      child: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+        stream: firestore.queryActiveLearningPaths().snapshots(),
+        builder: (context, pathsSnap) {
+          if (pathsSnap.connectionState == ConnectionState.waiting) {
+            return const _TodaysSessionContent(
+              title: "Today’s Session",
+              subtitle: 'Loading your next best action…',
+              primaryLabel: 'Loading…',
+              primaryEnabled: false,
+            );
+          }
+          if (pathsSnap.hasError) {
+            return _TodaysSessionContent(
+              title: "Today’s Session",
+              subtitle: 'Failed to load courses.\n${pathsSnap.error}',
+              primaryLabel: 'Retry',
+              primaryEnabled: false,
+            );
+          }
+
+          final paths = (pathsSnap.data?.docs ?? [])
+              .map(LearningPath.fromDoc)
+              .where((p) => p.isActive && p.title.trim().isNotEmpty)
+              .toList();
+
+          return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+            stream: firestore.queryUserEnrollments(user.uid).snapshots(),
+            builder: (context, enrollSnap) {
+              final enrollments = (enrollSnap.data?.docs ?? []).map(UserEnrollment.fromDoc).toList();
+              return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: firestore.queryCompletedUserProgress(user.uid).snapshots(),
+                builder: (context, progressSnap) {
+                  final completed = (progressSnap.data?.docs ?? [])
+                      .map(UserProgress.fromDoc)
+                      .where((p) => p.completed)
+                      .toList();
+
+                  // Determine which path to fetch modules for.
+                  final activePaths = paths..sort((a, b) => a.order.compareTo(b.order));
+                  final enrolledIds = enrollments.where((e) => e.status == 'active').map((e) => e.pathId).toSet();
+                  final targetPath = activePaths.firstWhere(
+                    (p) => enrolledIds.contains(p.id),
+                    orElse: () => activePaths.isNotEmpty ? activePaths.first : const LearningPath(
+                      id: '',
+                      title: '',
+                      description: '',
+                      category: '',
+                      totalDurationHours: 0,
+                      isActive: false,
+                      order: 0,
+                    ),
+                  );
+
+                  if (targetPath.id.isEmpty) {
+                    return _TodaysSessionContent(
+                      title: "Today’s Session",
+                      subtitle: 'No lessons available yet.\nAdd learning_paths in Firestore.',
+                      primaryLabel: 'Browse Courses',
+                      primaryEnabled: true,
+                      primaryIcon: Icons.search_rounded,
+                      onPrimary: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const LearningHubScreen()),
+                        );
+                      },
+                    );
+                  }
+
+                  return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                    stream: firestore.queryModulesForPath(targetPath.id).snapshots(),
+                    builder: (context, modulesSnap) {
+                      final modules = (modulesSnap.data?.docs ?? [])
+                          .map(LearningModule.fromDoc)
+                          .where((m) => m.isActive && m.title.trim().isNotEmpty)
+                          .toList();
+
+                      final modulesByPathId = <String, List<LearningModule>>{targetPath.id: modules};
+                      final recommendation = reco.compute(
+                        enrollments: enrollments,
+                        paths: paths,
+                        modulesByPathId: modulesByPathId,
+                        completedProgress: completed,
+                      );
+
+                      if (recommendation == null) {
+                        return _TodaysSessionContent(
+                          title: "Today’s Session",
+                          subtitle: 'No recommendation yet.\nAdd modules for your learning paths.',
+                          primaryLabel: 'Browse Courses',
+                          primaryEnabled: true,
+                          primaryIcon: Icons.search_rounded,
+                          onPrimary: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(builder: (_) => const LearningHubScreen()),
+                            );
+                          },
+                        );
+                      }
+
+                      return _TodaysSessionContent(
+                        title: "Today’s Session",
+                        subtitle: recommendation.label,
+                        primaryLabel: recommendation.type == RecommendationType.module ? 'Start' : 'Open',
+                        primaryEnabled: true,
+                        primaryIcon: recommendation.type == RecommendationType.module
+                            ? Icons.play_arrow_rounded
+                            : Icons.school_rounded,
+                        onPrimary: () {
+                          AnalyticsService.instance.track('todays_session_start', props: {
+                            'type': recommendation.type.name,
+                            'pathId': recommendation.path.id,
+                            'moduleId': recommendation.module?.id,
+                          });
+
+                          if (recommendation.type == RecommendationType.module && recommendation.module != null) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => ModulePlayerScreen(
+                                  path: recommendation.path,
+                                  module: recommendation.module!,
+                                ),
+                              ),
+                            );
+                            return;
+                          }
+
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => CourseDetailScreen(path: recommendation.path),
+                            ),
+                          );
+                        },
+                        secondaryLabel: 'Browse all',
+                        onSecondary: () {
+                          AnalyticsService.instance.track('todays_session_browse_all');
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const LearningHubScreen()),
+                          );
+                        },
+                      );
+                    },
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _TodaysSessionContent extends StatelessWidget {
+  const _TodaysSessionContent({
+    required this.title,
+    required this.subtitle,
+    required this.primaryLabel,
+    required this.primaryEnabled,
+    this.primaryIcon,
+    this.onPrimary,
+    this.secondaryLabel,
+    this.onSecondary,
+  });
+
+  final String title;
+  final String subtitle;
+  final String primaryLabel;
+  final bool primaryEnabled;
+  final IconData? primaryIcon;
+  final VoidCallback? onPrimary;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: cs.primary.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                'Daily'.toUpperCase(),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Text(
+          subtitle,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: EoColors.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+                height: 1.25,
+              ),
+        ),
+        const SizedBox(height: 14),
+        Row(
+          children: [
+            Expanded(
+              child: EoTactileButton.primary(
+                label: primaryLabel,
+                icon: primaryIcon != null ? Icon(primaryIcon) : null,
+                onPressed: primaryEnabled ? (onPrimary ?? () {}) : null,
+              ),
+            ),
+            if (secondaryLabel != null) ...[
+              const SizedBox(width: 12),
+              Expanded(
+                child: EoTactileButton.tonal(
+                  label: secondaryLabel!,
+                  icon: const Icon(Icons.search_rounded),
+                  toneColor: EoColors.surfaceContainerHigh,
+                  onPressed: onSecondary,
+                ),
+              ),
+            ]
+          ],
+        ),
+      ],
+    );
+  }
+}
+
 class _BentoTile extends StatelessWidget {
   const _BentoTile({
     required this.color,
@@ -768,12 +1100,22 @@ class _BentoTile extends StatelessWidget {
 class _RitualsGrid extends StatelessWidget {
   const _RitualsGrid();
 
+  IconData _iconFromName(String raw) {
+    final v = raw.trim().toLowerCase();
+    return switch (v) {
+      'breathing' => Icons.air_rounded,
+      'journal' => Icons.edit_note_rounded,
+      'walk' => Icons.directions_walk_rounded,
+      'learning' => Icons.menu_book_rounded,
+      'focus' => Icons.center_focus_strong_rounded,
+      'gratitude' => Icons.volunteer_activism_rounded,
+      _ => Icons.auto_awesome_rounded,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    void comingSoon(String label) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('$label — coming soon')));
-    }
 
     Widget tile({required IconData icon, required Color iconColor, required String title, required String meta, required VoidCallback onTap}) {
       return InkWell(
@@ -815,42 +1157,74 @@ class _RitualsGrid extends StatelessWidget {
       );
     }
 
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      childAspectRatio: 1.05,
-      children: [
-        tile(icon: Icons.air_rounded, iconColor: Colors.blue, title: 'Breathing', meta: '5 min session', onTap: () => comingSoon('Breathing')),
-        tile(icon: Icons.edit_note_rounded, iconColor: Colors.amber.shade700, title: 'Journal', meta: 'Morning entry', onTap: () => comingSoon('Journal')),
-        tile(icon: Icons.directions_walk_rounded, iconColor: Colors.green.shade700, title: 'Walk', meta: '2,400 steps', onTap: () => comingSoon('Walk')),
-        tile(
-          icon: Icons.menu_book_rounded,
-          iconColor: Colors.purple,
-          title: 'Learning',
-          meta: '15 min deep',
-          onTap: () {
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirestoreService().queryActiveRituals().snapshots(),
+      builder: (context, snap) {
+        final rituals = (snap.data?.docs ?? [])
+            .map(Ritual.fromDoc)
+            .where((r) => r.isActive && r.title.trim().isNotEmpty)
+            .toList()
+          ..sort((a, b) => a.order.compareTo(b.order));
+
+        if (rituals.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.only(top: 6),
+            child: Text(
+              'No rituals yet. Add documents to `rituals` (isActive=true).',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: EoColors.onSurfaceVariant),
+              textAlign: TextAlign.center,
+            ),
+          );
+        }
+
+        final top = rituals.take(4).toList();
+
+        void onRitualTap(Ritual r) {
+          final action = (r.action ?? '').trim();
+          if (action == 'open_learning_hub') {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LearningHubScreen()));
-          },
-        ),
-      ],
+            return;
+          }
+          if (action == 'open_reset') {
+            // Reset is available via bottom nav; pushing the screen keeps it simple.
+            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ResetStudioScreen()));
+            return;
+          }
+          if (action == 'open_url' && (r.actionTarget ?? '').trim().isNotEmpty) {
+            launchUrl(Uri.parse(r.actionTarget!), mode: LaunchMode.externalApplication);
+            return;
+          }
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Ritual “${r.title}” is not configured.')),
+          );
+        }
+
+        return GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+          childAspectRatio: 1.05,
+          children: top
+              .map(
+                (r) => tile(
+                  icon: _iconFromName(r.icon),
+                  iconColor: cs.primary,
+                  title: r.title,
+                  meta: r.meta,
+                  onTap: () => onRitualTap(r),
+                ),
+              )
+              .toList(),
+        );
+      },
     );
   }
 }
 
 class _RitualsBottomSheet extends StatelessWidget {
   const _RitualsBottomSheet();
-
-  static const _items = <({String title, IconData icon})>[
-    (title: 'Breathing', icon: Icons.self_improvement_rounded),
-    (title: 'Journal', icon: Icons.edit_note_rounded),
-    (title: 'Walk', icon: Icons.directions_walk_rounded),
-    (title: 'Learning', icon: Icons.lightbulb_rounded),
-    (title: 'Focus', icon: Icons.center_focus_strong_rounded),
-    (title: 'Gratitude', icon: Icons.volunteer_activism_rounded),
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -864,37 +1238,85 @@ class _RitualsBottomSheet extends StatelessWidget {
           children: [
             Text('All Rituals', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900)),
             const SizedBox(height: 12),
-            ..._items.map(
-              (it) => Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: EoCard(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.10)),
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${it.title} — coming soon')));
-                  },
-                  child: Row(
-                    children: [
-                      Container(
-                        height: 42,
-                        width: 42,
-                        decoration: BoxDecoration(
-                          color: cs.primaryContainer,
-                          borderRadius: BorderRadius.circular(16),
+            StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+              stream: FirestoreService().queryActiveRituals().snapshots(),
+              builder: (context, snap) {
+                final rituals = (snap.data?.docs ?? [])
+                    .map(Ritual.fromDoc)
+                    .where((r) => r.isActive && r.title.trim().isNotEmpty)
+                    .toList()
+                  ..sort((a, b) => a.order.compareTo(b.order));
+
+                if (rituals.isEmpty) {
+                  return Text(
+                    'No rituals configured.',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: EoColors.onSurfaceVariant),
+                  );
+                }
+
+                return Column(
+                  children: rituals.map(
+                    (r) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: EoCard(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.10)),
+                          onTap: () {
+                            Navigator.of(context).pop();
+                            // Delegate to the grid's tap behavior by reusing action.
+                            // Keep simple: only handle known actions.
+                            final action = (r.action ?? '').trim();
+                            if (action == 'open_learning_hub') {
+                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const LearningHubScreen()));
+                              return;
+                            }
+                            if (action == 'open_reset') {
+                              Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ResetStudioScreen()));
+                              return;
+                            }
+                            if (action == 'open_url' && (r.actionTarget ?? '').trim().isNotEmpty) {
+                              launchUrl(Uri.parse(r.actionTarget!), mode: LaunchMode.externalApplication);
+                              return;
+                            }
+                          },
+                          child: Row(
+                            children: [
+                              Container(
+                                height: 42,
+                                width: 42,
+                                decoration: BoxDecoration(
+                                  color: cs.primaryContainer,
+                                  borderRadius: BorderRadius.circular(16),
+                                ),
+                                child: Icon(Icons.auto_awesome_rounded, color: cs.primary),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  r.title,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w900),
+                                ),
+                              ),
+                              Icon(
+                                Icons.chevron_right_rounded,
+                                color: EoColors.onSurfaceVariant.withValues(alpha: 0.60),
+                              ),
+                            ],
+                          ),
                         ),
-                        child: Icon(it.icon, color: cs.primary),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(it.title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
-                      ),
-                      Icon(Icons.chevron_right_rounded, color: EoColors.onSurfaceVariant.withValues(alpha: 0.60)),
-                    ],
-                  ),
-                ),
-              ),
-            )
+                      );
+                    },
+                  ).toList(),
+                );
+              },
+            ),
           ],
         ),
       ),

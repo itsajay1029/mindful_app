@@ -4,7 +4,9 @@ import 'package:video_player/video_player.dart';
 
 import '../models/learning_module.dart';
 import '../models/learning_path.dart';
+import '../models/module_step.dart';
 import '../models/user_enrollment.dart';
+import '../services/analytics_service.dart';
 import '../services/firestore_service.dart';
 import '../widgets/video/modern_video_player.dart';
 
@@ -31,8 +33,18 @@ class ModulePlayerScreen extends StatefulWidget {
 }
 
 class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
-  late final VideoPlayerController _videoController;
+  VideoPlayerController? _videoController;
+
+  /// Used for the legacy single-reflection UX AND as the final reflection text
+  /// when step-based modules include a reflection step.
   final _reflectionController = TextEditingController();
+
+  // ===== Step-based module state =====
+  int _stepIndex = 0;
+  int? _quizSelected;
+  bool _quizSubmitted = false;
+  final _stepScroll = ScrollController();
+
   bool _busy = false;
   bool _completed = false;
   bool _loadingCompletion = true;
@@ -40,13 +52,29 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
   bool _isEnrolled = false;
   String? _videoError;
 
+  List<ModuleStep> get _steps => widget.module.steps ?? const <ModuleStep>[];
+  bool get _isStepBased => widget.module.steps != null && widget.module.steps!.isNotEmpty;
+
   @override
   void initState() {
     super.initState();
-    _videoController = VideoPlayerController.networkUrl(Uri.parse(widget.module.contentUrl));
-    _initVideo();
+
+    // Legacy (single video): initialize immediately.
+    // Step-based: initialize only when current step is a video.
+    if (!_isStepBased) {
+      _setVideoUrl(widget.module.contentUrl);
+    } else {
+      _initCurrentStep();
+    }
+
     _loadCompletion();
     _loadEnrollment();
+
+    AnalyticsService.instance.track('module_opened', props: {
+      'pathId': widget.path.id,
+      'moduleId': widget.module.id,
+      'contentType': widget.module.contentType,
+    });
   }
 
   Future<void> _loadEnrollment() async {
@@ -107,15 +135,17 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
   }
 
   Future<void> _initVideo() async {
+    final controller = _videoController;
+    if (controller == null) return;
     try {
-      await _videoController.initialize();
+      await controller.initialize();
 
       // Always start from the beginning for a predictable course experience.
-      await _videoController.seekTo(Duration.zero);
+      await controller.seekTo(Duration.zero);
 
       // Autoplay on open (modern app behavior). If you want manual start,
       // remove this line.
-      await _videoController.play();
+      await controller.play();
 
       if (!mounted) return;
       setState(() {
@@ -129,14 +159,314 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
     }
   }
 
+  void _setVideoUrl(String url) {
+    // Empty URLs are common when content isn't configured yet.
+    if (url.trim().isEmpty) {
+      setState(() {
+        _videoController = null;
+        _videoError = 'No video URL configured.';
+      });
+      return;
+    }
+
+    // Dispose previous controller (if any)
+    _videoController?.pause();
+    _videoController?.dispose();
+
+    _videoController = VideoPlayerController.networkUrl(Uri.parse(url));
+    _videoError = null;
+    _initVideo();
+  }
+
+  void _initCurrentStep() {
+    if (!_isStepBased) return;
+    if (_stepIndex < 0 || _stepIndex >= _steps.length) return;
+
+    final step = _steps[_stepIndex];
+    // reset per-step state
+    _quizSelected = null;
+    _quizSubmitted = false;
+
+    if (step.type == ModuleStepType.video) {
+      _setVideoUrl(step.url ?? '');
+    } else {
+      // not a video step
+      _videoController?.pause();
+    }
+  }
+
   @override
   void dispose() {
     // Prevent background playback when leaving the screen.
     // (If you ever want background playback, remove this.)
-    _videoController.pause();
-    _videoController.dispose();
+    _videoController?.pause();
+    _videoController?.dispose();
     _reflectionController.dispose();
+    _stepScroll.dispose();
     super.dispose();
+  }
+
+  void _nextStep() {
+    if (!_isStepBased) return;
+    if (_stepIndex >= _steps.length - 1) return;
+    setState(() {
+      _stepIndex += 1;
+    });
+    _initCurrentStep();
+    if (_stepScroll.hasClients) {
+      _stepScroll.animateTo(0, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+    }
+  }
+
+  void _prevStep() {
+    if (!_isStepBased) return;
+    if (_stepIndex <= 0) return;
+    setState(() {
+      _stepIndex -= 1;
+    });
+    _initCurrentStep();
+    if (_stepScroll.hasClients) {
+      _stepScroll.animateTo(0, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+    }
+  }
+
+  Widget _buildStepBasedBody(BuildContext context) {
+    final step = _steps[_stepIndex];
+    final cs = Theme.of(context).colorScheme;
+
+    Widget header() {
+      return Row(
+        children: [
+          Text(
+            'Step ${_stepIndex + 1} of ${_steps.length}',
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: Colors.black.withValues(alpha: 0.65),
+                ),
+          ),
+          const Spacer(),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: cs.tertiaryContainer.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '${widget.module.xp} XP',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: cs.tertiary,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.1,
+                  ),
+            ),
+          ),
+        ],
+      );
+    }
+
+    Widget content() {
+      switch (step.type) {
+        case ModuleStepType.video:
+          final controller = _videoController;
+          return SizedBox(
+            height: 240,
+            child: _videoError != null
+                ? Center(child: Text('Unable to play.\n$_videoError', textAlign: TextAlign.center))
+                : ModernVideoPlayer(
+                    controller: controller!,
+                    borderRadius: 18,
+                    allowFullscreen: true,
+                    showSkipButtons: true,
+                  ),
+          );
+
+        case ModuleStepType.quiz:
+          final prompt = (step.prompt ?? '').trim().isEmpty
+              ? 'Choose the best answer.'
+              : step.prompt!.trim();
+          final options = step.options ?? const <String>[];
+          final correct = step.correctIndex;
+          final explanation = step.explanation;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                prompt,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 12),
+              ...List.generate(options.length, (i) {
+                final isSelected = _quizSelected == i;
+                final isCorrect = _quizSubmitted && correct != null && i == correct;
+                final isWrong = _quizSubmitted && isSelected && correct != null && i != correct;
+                final bg = isCorrect
+                    ? cs.primary.withValues(alpha: 0.12)
+                    : isWrong
+                        ? cs.error.withValues(alpha: 0.10)
+                        : Colors.white;
+
+                final enabled = !_quizSubmitted;
+                return InkWell(
+                  onTap: enabled ? () => setState(() => _quizSelected = i) : null,
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: bg,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isCorrect
+                            ? cs.primary.withValues(alpha: 0.35)
+                            : isWrong
+                                ? cs.error.withValues(alpha: 0.35)
+                                : Colors.black.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                          color: isWrong ? cs.error : cs.primary,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            options[i],
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              if (_quizSubmitted && (explanation ?? '').trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  explanation!,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.black.withValues(alpha: 0.65),
+                        height: 1.25,
+                      ),
+                ),
+              ],
+            ],
+          );
+
+        case ModuleStepType.reflection:
+          final prompt = (step.prompt ?? '').trim().isEmpty
+              ? 'What will you apply from this lesson?'
+              : step.prompt!.trim();
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                prompt,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _reflectionController,
+                minLines: 4,
+                maxLines: 7,
+                readOnly: _completed,
+                decoration: InputDecoration(
+                  hintText: 'Write a few sentences…',
+                  filled: true,
+                  fillColor: const Color(0xFFF6F7FB),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide(color: Colors.black.withValues(alpha: 0.08)),
+                  ),
+                ),
+              ),
+            ],
+          );
+      }
+    }
+
+    Widget primaryButton() {
+      final isLast = _stepIndex == _steps.length - 1;
+
+      // quiz gating
+      if (step.type == ModuleStepType.quiz && !_quizSubmitted) {
+        return FilledButton(
+          onPressed: _busy
+              ? null
+              : () {
+                  if (_quizSelected == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Pick an option to continue')),
+                    );
+                    return;
+                  }
+                  setState(() => _quizSubmitted = true);
+                },
+          child: const Text('Check answer'),
+        );
+      }
+
+      if (isLast) {
+        return FilledButton(
+          onPressed: (_busy || _completed || _loadingCompletion) ? null : _complete,
+          child: (_busy || _loadingCompletion)
+              ? const SizedBox(
+                  height: 18,
+                  width: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(_completed ? 'Completed' : 'Complete lesson'),
+        );
+      }
+
+      return FilledButton(
+        onPressed: _busy ? null : _nextStep,
+        child: const Text('Continue'),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        header(),
+        const SizedBox(height: 12),
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _stepScroll,
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
+              ),
+              child: content(),
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            if (_stepIndex > 0) ...[
+              Expanded(
+                child: FilledButton.tonal(
+                  onPressed: _busy ? null : _prevStep,
+                  child: const Text('Back'),
+                ),
+              ),
+              const SizedBox(width: 12),
+            ],
+            Expanded(child: primaryButton()),
+          ],
+        ),
+      ],
+    );
   }
 
   Future<void> _complete() async {
@@ -147,6 +477,13 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
 
     setState(() => _busy = true);
     try {
+      AnalyticsService.instance.track('module_complete_attempt', props: {
+        'pathId': widget.path.id,
+        'moduleId': widget.module.id,
+        'xpReward': widget.module.xp,
+        'hasReflection': _reflectionController.text.trim().isNotEmpty,
+      });
+
       // XP Logic: on first completion only, add module.xp to users.xp
       final didWrite = await FirestoreService().markModuleCompleted(
         uid: user.uid,
@@ -159,6 +496,13 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
       if (!mounted) return;
 
       setState(() => _completed = true);
+
+      AnalyticsService.instance.track('module_completed', props: {
+        'pathId': widget.path.id,
+        'moduleId': widget.module.id,
+        'didWrite': didWrite,
+        'xpReward': widget.module.xp,
+      });
 
       if (didWrite) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -247,6 +591,20 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
       );
     }
 
+    // Step-based module runner
+    if (_isStepBased) {
+      return Scaffold(
+        backgroundColor: const Color(0xFFF6F7FB),
+        appBar: AppBar(title: Text(widget.module.title)),
+        body: Padding(
+          padding: const EdgeInsets.all(16),
+          child: _buildStepBasedBody(context),
+        ),
+      );
+    }
+
+    // Legacy single-video module player
+    final controller = _videoController;
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
       appBar: AppBar(
@@ -260,7 +618,7 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
             // Video player
             SizedBox(
               height: 220,
-              child: _videoError != null
+              child: (_videoError != null || controller == null)
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(18),
                       child: Container(
@@ -282,7 +640,7 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                _videoError!,
+                                _videoError ?? 'No video URL configured.',
                                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                       color: Colors.white.withValues(alpha: 0.75),
                                     ),
@@ -292,7 +650,7 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
                               ),
                               const SizedBox(height: 10),
                               FilledButton.tonal(
-                                onPressed: _initVideo,
+                                onPressed: () => _setVideoUrl(widget.module.contentUrl),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: Colors.white,
                                   foregroundColor: Colors.black,
@@ -305,7 +663,7 @@ class _ModulePlayerScreenState extends State<ModulePlayerScreen> {
                       ),
                     )
                   : ModernVideoPlayer(
-                      controller: _videoController,
+                      controller: controller,
                       borderRadius: 18,
                       allowFullscreen: true,
                       showSkipButtons: true,

@@ -4,8 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/learning_module.dart';
 import '../models/learning_path.dart';
-import '../models/user_progress.dart';
 import '../models/user_enrollment.dart';
+import '../models/user_progress.dart';
+import '../services/analytics_service.dart';
 import '../services/firestore_service.dart';
 import 'module_player_screen.dart';
 
@@ -16,15 +17,31 @@ import 'module_player_screen.dart';
 /// - Course overview
 /// - Module list
 /// - Progress
-class CourseDetailScreen extends StatelessWidget {
+class CourseDetailScreen extends StatefulWidget {
   const CourseDetailScreen({super.key, required this.path});
 
   final LearningPath path;
 
   @override
+  State<CourseDetailScreen> createState() => _CourseDetailScreenState();
+}
+
+class _CourseDetailScreenState extends State<CourseDetailScreen> {
+  @override
+  void initState() {
+    super.initState();
+
+    // Important: track once (not inside build), otherwise rebuilds can spam events.
+    AnalyticsService.instance.track('course_detail_opened', props: {
+      'pathId': widget.path.id,
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final cs = Theme.of(context).colorScheme;
+    final path = widget.path;
 
     return Scaffold(
       backgroundColor: const Color(0xFFF6F7FB),
@@ -35,232 +52,296 @@ class CourseDetailScreen extends StatelessWidget {
               stream: FirestoreService().queryUserEnrollments(user.uid).snapshots(),
               builder: (context, enrollSnap) {
                 final enrollments = (enrollSnap.data?.docs ?? []).map(UserEnrollment.fromDoc).toList();
-                final isEnrolled = enrollments.any((e) => e.status == 'active' && e.pathId == path.id);
-
-                return StreamBuilder(
-                  stream: FirestoreService().queryModulesForPath(path.id).snapshots(),
-                  builder: (context, AsyncSnapshot<QuerySnapshot<Map<String, dynamic>>> modulesSnap) {
-                if (modulesSnap.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (modulesSnap.hasError) {
-                  return Center(child: Text('Failed to load modules: ${modulesSnap.error}'));
-                }
-
-                final modules = (modulesSnap.data?.docs ?? [])
-                    .map(LearningModule.fromDoc)
-                    .where((m) => m.title.trim().isNotEmpty)
-                    .toList();
+                final isEnrolled =
+                    enrollments.any((e) => e.status == 'active' && e.pathId == path.id);
 
                 return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                  stream: FirestoreService().queryUserProgressForPath(uid: user.uid, pathId: path.id).snapshots(),
-                  builder: (context, progressSnap) {
-                    final progressDocs = (progressSnap.data?.docs ?? [])
-                        .map(UserProgress.fromDoc)
-                        .where((p) => p.completed)
+                  stream: FirestoreService().queryModulesForPath(path.id).snapshots(),
+                  builder: (context, modulesSnap) {
+                    if (modulesSnap.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (modulesSnap.hasError) {
+                      return Center(child: Text('Failed to load modules: ${modulesSnap.error}'));
+                    }
+
+                    final modules = (modulesSnap.data?.docs ?? [])
+                        .map(LearningModule.fromDoc)
+                        .where((m) => m.title.trim().isNotEmpty)
                         .toList();
-                    final completedModuleIds = progressDocs.map((p) => p.moduleId).toSet();
 
-                    final completedCount = modules.where((m) => completedModuleIds.contains(m.id)).length;
-                    final total = modules.length;
-                    final pct = total == 0 ? 0.0 : (completedCount / total);
+                    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                      stream: FirestoreService()
+                          .queryUserProgressForPath(uid: user.uid, pathId: path.id)
+                          .snapshots(),
+                      builder: (context, progressSnap) {
+                        final progressDocs = (progressSnap.data?.docs ?? [])
+                            .map(UserProgress.fromDoc)
+                            .where((p) => p.completed)
+                            .toList();
+                        final completedModuleIds =
+                            progressDocs.map((p) => p.moduleId).toSet();
 
-                    return ListView(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-                      children: [
-                        // Overview card
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            color: Colors.white,
-                            border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-                            boxShadow: [
-                              BoxShadow(
-                                blurRadius: 18,
-                                offset: const Offset(0, 10),
-                                color: Colors.black.withValues(alpha: 0.06),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                path.title,
-                                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                path.description.trim().isEmpty ? 'A focused learning path.' : path.description,
-                                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                      color: Colors.black.withValues(alpha: 0.65),
-                                    ),
-                              ),
-                              const SizedBox(height: 14),
-                              Row(
-                                children: [
-                                  _Chip(label: _prettyCategory(path.category)),
-                                  const SizedBox(width: 10),
-                                  _Chip(label: path.durationLabel),
+                        final completedCount =
+                            modules.where((m) => completedModuleIds.contains(m.id)).length;
+                        final total = modules.length;
+                        final pct = total == 0 ? 0.0 : (completedCount / total);
+
+                        return ListView(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                          children: [
+                            // Overview card
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                color: Colors.white,
+                                border: Border.all(
+                                    color: Colors.black.withValues(alpha: 0.05)),
+                                boxShadow: [
+                                  BoxShadow(
+                                    blurRadius: 18,
+                                    offset: const Offset(0, 10),
+                                    color: Colors.black.withValues(alpha: 0.06),
+                                  ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Progress',
-                                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                  ),
-                                  Text(
-                                    '$completedCount / $total',
-                                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                          color: cs.primary,
+                                    path.title,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleLarge
+                                        ?.copyWith(
                                           fontWeight: FontWeight.w900,
                                         ),
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(999),
-                                child: LinearProgressIndicator(
-                                  value: pct,
-                                  minHeight: 10,
-                                  backgroundColor: Colors.black.withValues(alpha: 0.06),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        if (!isEnrolled) ...[
-                          const SizedBox(height: 14),
-                          Container(
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: cs.primary.withValues(alpha: 0.08),
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: cs.primary.withValues(alpha: 0.14)),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(Icons.lock_rounded, color: cs.primary),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    'Enroll to unlock modules and start learning.',
-                                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                          color: Colors.black.withValues(alpha: 0.70),
-                                          fontWeight: FontWeight.w700,
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    path.description.trim().isEmpty
+                                        ? 'A focused learning path.'
+                                        : path.description,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(
+                                          color: Colors.black.withValues(alpha: 0.65),
                                         ),
                                   ),
-                                ),
-                                FilledButton(
-                                  onPressed: () async {
-                                    await FirestoreService().enrollInPath(uid: user.uid, pathId: path.id);
-                                  },
-                                  child: const Text('Enroll'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: 18),
-
-                        Text(
-                          'Modules',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                              ),
-                        ),
-                        const SizedBox(height: 12),
-
-                        if (modules.isEmpty)
-                          const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: Text(
-                              'No modules found for this path.\n\nAdd documents to `modules` with `pathId` set to this learning path id.',
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-
-                        ...modules.map((m) {
-                          final done = completedModuleIds.contains(m.id);
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(18),
-                              border: Border.all(color: Colors.black.withValues(alpha: 0.05)),
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  height: 44,
-                                  width: 44,
-                                  decoration: BoxDecoration(
-                                    color: done
-                                        ? cs.primary.withValues(alpha: 0.15)
-                                        : Colors.black.withValues(alpha: 0.06),
-                                    borderRadius: BorderRadius.circular(14),
+                                  const SizedBox(height: 14),
+                                  Row(
+                                    children: [
+                                      _Chip(label: _prettyCategory(path.category)),
+                                      const SizedBox(width: 10),
+                                      _Chip(label: path.durationLabel),
+                                    ],
                                   ),
-                                  child: Icon(
-                                    done ? Icons.check_circle_rounded : Icons.play_circle_fill_rounded,
-                                    color: done ? cs.primary : Colors.black.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                  const SizedBox(height: 16),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        m.title,
-                                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                        'Progress',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
                                               fontWeight: FontWeight.w800,
                                             ),
                                       ),
-                                      const SizedBox(height: 4),
                                       Text(
-                                        '${m.durationMinutes} min • ${m.xp} XP',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                              color: Colors.black.withValues(alpha: 0.6),
+                                        '$completedCount / $total',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelLarge
+                                            ?.copyWith(
+                                              color: cs.primary,
+                                              fontWeight: FontWeight.w900,
                                             ),
                                       ),
                                     ],
                                   ),
-                                ),
-                                const SizedBox(width: 10),
-                                FilledButton.tonal(
-                                  onPressed: isEnrolled
-                                      ? () {
-                                          Navigator.of(context).push(
-                                            MaterialPageRoute(
-                                              builder: (_) => ModulePlayerScreen(
-                                                path: path,
-                                                module: m,
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      : null,
-                                  child: Text(done ? 'Replay' : 'Start'),
-                                ),
-                              ],
+                                  const SizedBox(height: 8),
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(999),
+                                    child: LinearProgressIndicator(
+                                      value: pct,
+                                      minHeight: 10,
+                                      backgroundColor:
+                                          Colors.black.withValues(alpha: 0.06),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
-                          );
-                        }),
-                      ],
+
+                            if (!isEnrolled) ...[
+                              const SizedBox(height: 14),
+                              Container(
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: cs.primary.withValues(alpha: 0.08),
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                      color: cs.primary.withValues(alpha: 0.14)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.lock_rounded, color: cs.primary),
+                                    const SizedBox(width: 10),
+                                    Expanded(
+                                      child: Text(
+                                        'Enroll to unlock modules and start learning.',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium
+                                            ?.copyWith(
+                                              color:
+                                                  Colors.black.withValues(alpha: 0.70),
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                      ),
+                                    ),
+                                    FilledButton(
+                                      onPressed: () async {
+                                        AnalyticsService.instance.track(
+                                          'course_enroll_attempt',
+                                          props: {
+                                            'pathId': path.id,
+                                            'source': 'course_detail',
+                                          },
+                                        );
+                                        await FirestoreService().enrollInPath(
+                                          uid: user.uid,
+                                          pathId: path.id,
+                                        );
+                                        AnalyticsService.instance.track(
+                                          'course_enrolled',
+                                          props: {
+                                            'pathId': path.id,
+                                            'source': 'course_detail',
+                                          },
+                                        );
+                                      },
+                                      child: const Text('Enroll'),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+
+                            const SizedBox(height: 18),
+                            Text(
+                              'Modules',
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                            ),
+                            const SizedBox(height: 12),
+
+                            if (modules.isEmpty)
+                              const Padding(
+                                padding: EdgeInsets.all(12),
+                                child: Text(
+                                  'No modules found for this path.\n\nAdd documents to `modules` with `pathId` set to this learning path id.',
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+
+                            ...modules.map((m) {
+                              final done = completedModuleIds.contains(m.id);
+                              return Container(
+                                margin: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.all(14),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                      color: Colors.black.withValues(alpha: 0.05)),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      height: 44,
+                                      width: 44,
+                                      decoration: BoxDecoration(
+                                        color: done
+                                            ? cs.primary.withValues(alpha: 0.15)
+                                            : Colors.black.withValues(alpha: 0.06),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Icon(
+                                        done
+                                            ? Icons.check_circle_rounded
+                                            : Icons.play_circle_fill_rounded,
+                                        color: done
+                                            ? cs.primary
+                                            : Colors.black.withValues(alpha: 0.6),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            m.title,
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .titleSmall
+                                                ?.copyWith(
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            '${m.durationMinutes} min • ${m.xp} XP',
+                                            style: Theme.of(context)
+                                                .textTheme
+                                                .bodySmall
+                                                ?.copyWith(
+                                                  color: Colors.black
+                                                      .withValues(alpha: 0.6),
+                                                ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    FilledButton.tonal(
+                                      onPressed: isEnrolled
+                                          ? () {
+                                              AnalyticsService.instance.track(
+                                                'module_start_pressed',
+                                                props: {
+                                                  'pathId': path.id,
+                                                  'moduleId': m.id,
+                                                  'source': 'course_detail',
+                                                },
+                                              );
+                                              Navigator.of(context).push(
+                                                MaterialPageRoute(
+                                                  builder: (_) => ModulePlayerScreen(
+                                                    path: path,
+                                                    module: m,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          : null,
+                                      child: Text(done ? 'Replay' : 'Start'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                          ],
+                        );
+                      },
                     );
-                  },
-                );
                   },
                 );
               },
